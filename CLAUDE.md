@@ -5,7 +5,9 @@
 
 ## Project Overview
 
-Health & medical management service for Synclyf. Self-hosted, zero cloud, full data ownership.
+Health & medical management service for Synclyf. Dual deployment: Free tier (Synclyf-hosted web) and Paid tier (self-hosted Docker Compose). Full data ownership in both tiers.
+
+Service-level telemetry (health checks, metrics, error rates) is required for operational monitoring but MUST NOT include user content, medical data, or personal information.
 Multi-user Express.js backend + vanilla JS SPA frontend. SQLite via better-sqlite3.
 
 > **Shared standards** (git workflow, security rules, testing strategy, backend service architecture,
