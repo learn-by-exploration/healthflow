@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthFlow</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #e11d48;
+      --primary-light: #fecdd3;
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --text: #1a1a1a;
+      --text-secondary: #6b7280;
+      --border: #e5e7eb;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .app-header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .app-header h1 { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .app-header h1 span { color: var(--primary); }
+    .nav-tabs { display: flex; gap: 4px; background: var(--surface); padding: 8px 24px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .nav-tab {
+      padding: 8px 16px; border-radius: 8px; border: none; background: none; cursor: pointer;
+      font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .nav-tab:hover { background: var(--primary-light); color: var(--primary); }
+    .nav-tab.active { background: var(--primary); color: white; }
+    .content { max-width: 960px; margin: 0 auto; padding: 24px; }
+    .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
+    .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--text-secondary); }
+    .empty-state .material-icons-round { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.875rem; font-weight: 600; transition: all 0.2s; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { opacity: 0.9; }
+    .fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: white; border: none; cursor: pointer; font-size: 24px; box-shadow: 0 4px 12px rgba(225,29,72,0.3); display: flex; align-items: center; justify-content: center; z-index: 50; }
+    .user-menu { position: relative; }
+    .user-btn { background: none; border: 1px solid var(--border); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    #logout-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 0.8rem; padding: 4px 8px; }
+    #logout-btn:hover { color: var(--primary); }
+    .view { display: none; }
+    .view.active { display: block; }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <h1>🏥 <span>HealthFlow</span></h1>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <span id="user-email" style="font-size:0.8rem;color:var(--text-secondary);"></span>
+      <button id="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <nav class="nav-tabs" id="nav-tabs">
+    <button class="nav-tab active" data-view="vitals" onclick="switchView('vitals')">
+      <span class="material-icons-round" style="font-size:18px;">favorite</span> Vitals
+    </button>
+    <button class="nav-tab" data-view="medications" onclick="switchView('medications')">
+      <span class="material-icons-round" style="font-size:18px;">medication</span> Medications
+    </button>
+    <button class="nav-tab" data-view="appointments" onclick="switchView('appointments')">
+      <span class="material-icons-round" style="font-size:18px;">calendar_today</span> Appointments
+    </button>
+    <button class="nav-tab" data-view="emergency" onclick="switchView('emergency')">
+      <span class="material-icons-round" style="font-size:18px;">emergency</span> Emergency Cards
+    </button>
+    <button class="nav-tab" data-view="family" onclick="switchView('family')">
+      <span class="material-icons-round" style="font-size:18px;">people</span> Family
+    </button>
+  </nav>
+
+  <div class="content">
+    <div id="view-vitals" class="view active">
+      <div class="empty-state">
+        <span class="material-icons-round">favorite</span>
+        <h3>Vitals Tracking</h3>
+        <p>Track blood pressure, blood sugar, weight, temperature, SpO2, and heart rate.</p>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
+          <span class="material-icons-round" style="font-size:18px;">add</span> Add Vital
+        </button>
+      </div>
+    </div>
+    <div id="view-medications" class="view">
+      <div class="empty-state">
+        <span class="material-icons-round">medication</span>
+        <h3>Medication Management</h3>
+        <p>Manage medications, dosage schedules, and refill tracking.</p>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
+          <span class="material-icons-round" style="font-size:18px;">add</span> Add Medication
+        </button>
+      </div>
+    </div>
+    <div id="view-appointments" class="view">
+      <div class="empty-state">
+        <span class="material-icons-round">calendar_today</span>
+        <h3>Appointments</h3>
+        <p>Schedule and manage doctor appointments.</p>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
+          <span class="material-icons-round" style="font-size:18px;">add</span> Add Appointment
+        </button>
+      </div>
+    </div>
+    <div id="view-emergency" class="view">
+      <div class="empty-state">
+        <span class="material-icons-round">emergency</span>
+        <h3>Emergency Health Cards</h3>
+        <p>Store allergies, blood type, emergency contacts, and insurance details.</p>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
+          <span class="material-icons-round" style="font-size:18px;">add</span> Create Card
+        </button>
+      </div>
+    </div>
+    <div id="view-family" class="view">
+      <div class="empty-state">
+        <span class="material-icons-round">people</span>
+        <h3>Family Members</h3>
+        <p>Add family members to track health data for each person.</p>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
+          <span class="material-icons-round" style="font-size:18px;">add</span> Add Member
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ─── XSS Prevention ───
+    function esc(s) {
+      if (s == null) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    function escA(s) { return esc(s); }
+
+    // ─── CSRF token ───
+    function getCsrfToken() {
+      const match = document.cookie.match(/csrf_token=([a-f0-9]{64})/);
+      return match ? match[1] : '';
+    }
+
+    // ─── API helper ───
+    async function api(url, options = {}) {
+      const headers = { 'Content-Type': 'application/json', ...options.headers };
+      const csrf = getCsrfToken();
+      if (csrf) headers['X-CSRF-Token'] = csrf;
+      const res = await fetch(url, { ...options, headers, credentials: 'same-origin' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(err.error || 'Request failed');
+      }
+      return res.json();
+    }
+
+    // ─── View switching ───
+    function switchView(viewName) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      const viewEl = document.getElementById('view-' + viewName);
+      if (viewEl) viewEl.classList.add('active');
+      const tabEl = document.querySelector(`.nav-tab[data-view="${viewName}"]`);
+      if (tabEl) tabEl.classList.add('active');
+    }
+
+    // ─── Logout ───
+    async function logout() {
+      try { await api('/api/auth/logout', { method: 'POST' }); } catch {}
+      window.location.href = '/login';
+    }
+
+    // ─── Init ───
+    async function init() {
+      try {
+        const data = await api('/api/auth/me');
+        if (data.user) {
+          document.getElementById('user-email').textContent = esc(data.user.email);
+        }
+      } catch {
+        window.location.href = '/login';
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

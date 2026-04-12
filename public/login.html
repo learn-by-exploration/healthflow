@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthFlow — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --primary: #e11d48; --bg: #fafafa; --surface: #fff; --text: #1a1a1a; --border: #e5e7eb; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-card { background: var(--surface); border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 40px; width: 100%; max-width: 400px; }
+    .login-card h1 { text-align: center; margin-bottom: 8px; font-size: 1.5rem; }
+    .login-card p { text-align: center; color: #6b7280; margin-bottom: 24px; font-size: 0.875rem; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
+    .form-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+    .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; background: var(--primary); color: white; }
+    .btn:hover { opacity: 0.9; }
+    .error { color: #dc2626; font-size: 0.8rem; margin-bottom: 12px; min-height: 1.2em; }
+    .toggle { text-align: center; margin-top: 16px; font-size: 0.8rem; }
+    .toggle a { color: var(--primary); cursor: pointer; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>🏥 HealthFlow</h1>
+    <p id="form-subtitle">Sign in to your account</p>
+    <div class="error" id="error"></div>
+    <form id="auth-form" onsubmit="handleSubmit(event)">
+      <div class="form-group" id="name-group" style="display:none;">
+        <label for="display_name">Name</label>
+        <input type="text" id="display_name" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" required minlength="8">
+      </div>
+      <button type="submit" class="btn" id="submit-btn">Sign In</button>
+    </form>
+    <div class="toggle">
+      <span id="toggle-text">Don't have an account? </span>
+      <a id="toggle-link" onclick="toggleMode()">Register</a>
+    </div>
+  </div>
+  <script>
+    function esc(s) { if (s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    let isLogin = true;
+    function toggleMode() {
+      isLogin = !isLogin;
+      document.getElementById('form-subtitle').textContent = isLogin ? 'Sign in to your account' : 'Create a new account';
+      document.getElementById('submit-btn').textContent = isLogin ? 'Sign In' : 'Register';
+      document.getElementById('toggle-text').textContent = isLogin ? "Don't have an account? " : 'Already have an account? ';
+      document.getElementById('toggle-link').textContent = isLogin ? 'Register' : 'Sign In';
+      document.getElementById('name-group').style.display = isLogin ? 'none' : 'block';
+      document.getElementById('error').textContent = '';
+    }
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const display_name = document.getElementById('display_name').value;
+      const url = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const body = isLogin ? { email, password } : { email, password, display_name };
+      try {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        window.location.href = '/';
+      } catch (err) {
+        document.getElementById('error').textContent = esc(err.message);
+      }
+    }
+  </script>
+</body>
+</html>
