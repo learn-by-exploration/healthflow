@@ -12,187 +12,973 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --primary: #e11d48;
-      --primary-light: #fecdd3;
+      --primary: #E8837B;
+      --primary-dark: #D6675F;
+      --primary-light: #FDE8E6;
+      --primary-bg: #FFF5F4;
       --bg: #fafafa;
       --surface: #ffffff;
       --text: #1a1a1a;
       --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
       --border: #e5e7eb;
+      --border-light: #f3f4f6;
       --radius: 12px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --success: #22c55e;
+      --success-bg: #f0fdf4;
+      --warning: #f59e0b;
+      --warning-bg: #fffbeb;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --info: #3b82f6;
+      --info-bg: #eff6ff;
     }
     body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
     .app-header {
       background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 100;
     }
     .app-header h1 { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .app-header h1 span { color: var(--primary); }
-    .nav-tabs { display: flex; gap: 4px; background: var(--surface); padding: 8px 24px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    #user-email { font-size: 0.8rem; color: var(--text-secondary); }
+    #logout-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; }
+    #logout-btn:hover { color: var(--primary); background: var(--primary-light); }
+    .nav-tabs {
+      display: flex; gap: 4px; background: var(--surface); padding: 8px 24px;
+      border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
     .nav-tab {
-      padding: 8px 16px; border-radius: 8px; border: none; background: none; cursor: pointer;
-      font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;
-      transition: all 0.2s; white-space: nowrap;
+      padding: 8px 16px; border-radius: var(--radius-sm); border: none; background: none; cursor: pointer;
+      font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);
+      display: flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap;
     }
     .nav-tab:hover { background: var(--primary-light); color: var(--primary); }
     .nav-tab.active { background: var(--primary); color: white; }
+    .nav-tab .mi { font-size: 18px; }
     .content { max-width: 960px; margin: 0 auto; padding: 24px; }
     .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
-    .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; }
-    .empty-state { text-align: center; padding: 48px 24px; color: var(--text-secondary); }
-    .empty-state .material-icons-round { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.875rem; font-weight: 600; transition: all 0.2s; }
+    .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .card-header h3 { margin-bottom: 0; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 20px; text-align: center; border-top: 3px solid var(--primary);
+    }
+    .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .stat-card .stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px;
+      border-radius: var(--radius-sm); border: none; cursor: pointer;
+      font-size: 0.875rem; font-weight: 600; transition: all 0.2s; font-family: inherit;
+    }
     .btn-primary { background: var(--primary); color: white; }
-    .btn-primary:hover { opacity: 0.9; }
-    .fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: white; border: none; cursor: pointer; font-size: 24px; box-shadow: 0 4px 12px rgba(225,29,72,0.3); display: flex; align-items: center; justify-content: center; z-index: 50; }
-    .user-menu { position: relative; }
-    .user-btn { background: none; border: 1px solid var(--border); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    #logout-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 0.8rem; padding: 4px 8px; }
-    #logout-btn:hover { color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: var(--border-light); color: var(--text); }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { opacity: 0.9; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-icon {
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: var(--text-secondary); border-radius: 4px; display: inline-flex; align-items: center;
+    }
+    .btn-icon:hover { color: var(--primary); background: var(--primary-light); }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .data-table th { text-align: left; padding: 12px 16px; background: var(--border-light); color: var(--text-secondary); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border-light); }
+    .data-table tr:hover td { background: var(--primary-bg); }
+    .data-table .actions { white-space: nowrap; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-active { background: var(--success-bg); color: var(--success); }
+    .badge-paused { background: var(--warning-bg); color: var(--warning); }
+    .badge-stopped { background: var(--border-light); color: var(--text-muted); }
+    .badge-scheduled { background: var(--info-bg); color: var(--info); }
+    .badge-completed { background: var(--success-bg); color: var(--success); }
+    .badge-cancelled { background: var(--border-light); color: var(--text-muted); }
+    .badge-rescheduled { background: var(--warning-bg); color: var(--warning); }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 0.875rem; font-family: inherit; background: var(--surface); color: var(--text); transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      z-index: 200; justify-content: center; align-items: center; padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-md);
+      width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 24px;
+    }
+    .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+    .toast-container { position: fixed; top: 16px; right: 16px; z-index: 500; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      padding: 12px 20px; border-radius: var(--radius-sm); color: white; font-size: 0.875rem;
+      font-weight: 500; box-shadow: var(--shadow-md); animation: slideIn 0.3s ease;
+      display: flex; align-items: center; gap: 8px; min-width: 250px;
+    }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--danger); }
+    .toast-info { background: var(--info); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--text-secondary); }
+    .empty-state .material-icons-round { font-size: 48px; margin-bottom: 12px; opacity: 0.5; color: var(--primary); }
+    .empty-state h3 { color: var(--text); margin-bottom: 8px; }
     .view { display: none; }
     .view.active { display: block; }
+    .med-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .med-card {
+      background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 16px; border-left: 4px solid var(--success);
+    }
+    .med-card.stopped { border-left-color: var(--text-muted); }
+    .med-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .med-card-name { font-weight: 600; font-size: 1rem; }
+    .med-card-detail { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+    .med-card-actions { display: flex; gap: 4px; margin-top: 12px; flex-wrap: wrap; }
+    .appt-group { margin-bottom: 24px; }
+    .appt-group-header { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 2px solid var(--primary-light); }
+    .appt-card {
+      background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 16px; margin-bottom: 8px; display: flex; gap: 16px; align-items: flex-start;
+    }
+    .appt-time { font-size: 0.8rem; font-weight: 600; color: var(--primary); min-width: 60px; }
+    .appt-info { flex: 1; }
+    .appt-info h4 { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+    .appt-meta { font-size: 0.8rem; color: var(--text-secondary); }
+    .ec-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .ec-card {
+      background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 20px; border-top: 4px solid var(--danger);
+    }
+    .ec-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .ec-card-header h4 { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 6px; }
+    .ec-field { margin-bottom: 8px; }
+    .ec-field-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .ec-field-value { font-size: 0.875rem; }
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .filter-bar select {
+      padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 0.8rem; background: var(--surface); font-family: inherit;
+    }
+    @media print {
+      .app-header, .nav-tabs, .btn, .btn-icon, .modal-overlay, .toast-container, .filter-bar { display: none !important; }
+      .content { max-width: 100%; padding: 0; }
+      .ec-card { break-inside: avoid; border: 2px solid #000; box-shadow: none; page-break-inside: avoid; }
+    }
+    @media (max-width: 640px) {
+      .content { padding: 16px; }
+      .form-row { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .data-table { font-size: 0.8rem; }
+      .data-table th, .data-table td { padding: 8px 10px; }
+      .nav-tabs { padding: 8px 12px; }
+    }
   </style>
 </head>
 <body>
   <header class="app-header">
-    <h1>🏥 <span>HealthFlow</span></h1>
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span id="user-email" style="font-size:0.8rem;color:var(--text-secondary);"></span>
-      <button id="logout-btn" onclick="logout()">Logout</button>
+    <h1><span class="material-icons-round" style="color:var(--primary);font-size:28px">favorite</span> <span>HealthFlow</span></h1>
+    <div class="header-right">
+      <span id="user-email"></span>
+      <button id="logout-btn">Logout</button>
     </div>
   </header>
-
   <nav class="nav-tabs" id="nav-tabs">
-    <button class="nav-tab active" data-view="vitals" onclick="switchView('vitals')">
-      <span class="material-icons-round" style="font-size:18px;">favorite</span> Vitals
+    <button class="nav-tab active" data-view="dashboard">
+      <span class="material-icons-round mi">dashboard</span> Dashboard
     </button>
-    <button class="nav-tab" data-view="medications" onclick="switchView('medications')">
-      <span class="material-icons-round" style="font-size:18px;">medication</span> Medications
+    <button class="nav-tab" data-view="vitals">
+      <span class="material-icons-round mi">favorite</span> Vitals
     </button>
-    <button class="nav-tab" data-view="appointments" onclick="switchView('appointments')">
-      <span class="material-icons-round" style="font-size:18px;">calendar_today</span> Appointments
+    <button class="nav-tab" data-view="medications">
+      <span class="material-icons-round mi">medication</span> Medications
     </button>
-    <button class="nav-tab" data-view="emergency" onclick="switchView('emergency')">
-      <span class="material-icons-round" style="font-size:18px;">emergency</span> Emergency Cards
+    <button class="nav-tab" data-view="appointments">
+      <span class="material-icons-round mi">calendar_today</span> Appointments
     </button>
-    <button class="nav-tab" data-view="family" onclick="switchView('family')">
-      <span class="material-icons-round" style="font-size:18px;">people</span> Family
+    <button class="nav-tab" data-view="emergency">
+      <span class="material-icons-round mi">emergency</span> Emergency
+    </button>
+    <button class="nav-tab" data-view="family">
+      <span class="material-icons-round mi">people</span> Family
     </button>
   </nav>
-
   <div class="content">
-    <div id="view-vitals" class="view active">
-      <div class="empty-state">
-        <span class="material-icons-round">favorite</span>
-        <h3>Vitals Tracking</h3>
-        <p>Track blood pressure, blood sugar, weight, temperature, SpO2, and heart rate.</p>
-        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
-          <span class="material-icons-round" style="font-size:18px;">add</span> Add Vital
-        </button>
-      </div>
-    </div>
-    <div id="view-medications" class="view">
-      <div class="empty-state">
-        <span class="material-icons-round">medication</span>
-        <h3>Medication Management</h3>
-        <p>Manage medications, dosage schedules, and refill tracking.</p>
-        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
-          <span class="material-icons-round" style="font-size:18px;">add</span> Add Medication
-        </button>
-      </div>
-    </div>
-    <div id="view-appointments" class="view">
-      <div class="empty-state">
-        <span class="material-icons-round">calendar_today</span>
-        <h3>Appointments</h3>
-        <p>Schedule and manage doctor appointments.</p>
-        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
-          <span class="material-icons-round" style="font-size:18px;">add</span> Add Appointment
-        </button>
-      </div>
-    </div>
-    <div id="view-emergency" class="view">
-      <div class="empty-state">
-        <span class="material-icons-round">emergency</span>
-        <h3>Emergency Health Cards</h3>
-        <p>Store allergies, blood type, emergency contacts, and insurance details.</p>
-        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
-          <span class="material-icons-round" style="font-size:18px;">add</span> Create Card
-        </button>
-      </div>
-    </div>
-    <div id="view-family" class="view">
-      <div class="empty-state">
-        <span class="material-icons-round">people</span>
-        <h3>Family Members</h3>
-        <p>Add family members to track health data for each person.</p>
-        <button class="btn btn-primary" style="margin-top:16px;" onclick="alert('Coming soon')">
-          <span class="material-icons-round" style="font-size:18px;">add</span> Add Member
-        </button>
-      </div>
-    </div>
+    <div id="view-dashboard" class="view active"></div>
+    <div id="view-vitals" class="view"></div>
+    <div id="view-medications" class="view"></div>
+    <div id="view-appointments" class="view"></div>
+    <div id="view-emergency" class="view"></div>
+    <div id="view-family" class="view"></div>
   </div>
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal-content"></div>
+  </div>
+  <div class="toast-container" id="toast-container"></div>
 
   <script>
-    // ─── XSS Prevention ───
+    'use strict';
+
+    // ═══════════════════════════════════════════
+    // XSS Prevention
+    // ═══════════════════════════════════════════
     function esc(s) {
       if (s == null) return '';
-      return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
     function escA(s) { return esc(s); }
 
-    // ─── CSRF token ───
+    // ═══════════════════════════════════════════
+    // CSRF
+    // ═══════════════════════════════════════════
     function getCsrfToken() {
-      const match = document.cookie.match(/csrf_token=([a-f0-9]{64})/);
-      return match ? match[1] : '';
+      var m = document.cookie.match(/csrf_token=([a-f0-9]{64})/);
+      return m ? m[1] : '';
     }
 
-    // ─── API helper ───
-    async function api(url, options = {}) {
-      const headers = { 'Content-Type': 'application/json', ...options.headers };
-      const csrf = getCsrfToken();
+    // ═══════════════════════════════════════════
+    // API Helper
+    // ═══════════════════════════════════════════
+    async function api(url, options) {
+      options = options || {};
+      var headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+      var csrf = getCsrfToken();
       if (csrf) headers['X-CSRF-Token'] = csrf;
-      const res = await fetch(url, { ...options, headers, credentials: 'same-origin' });
+      var res = await fetch(url, Object.assign({}, options, { headers: headers, credentials: 'same-origin' }));
+      if (res.status === 401) { window.location.href = '/login'; throw new Error('Session expired'); }
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: res.statusText }));
+        var err = await res.json().catch(function() { return { error: res.statusText }; });
         throw new Error(err.error || 'Request failed');
       }
+      if (res.status === 204) return {};
       return res.json();
     }
 
-    // ─── View switching ───
+    // ═══════════════════════════════════════════
+    // Toast
+    // ═══════════════════════════════════════════
+    function showToast(message, type) {
+      type = type || 'info';
+      var el = document.createElement('div');
+      el.className = 'toast toast-' + type;
+      el.textContent = message;
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(function() { el.remove(); }, 3500);
+    }
+
+    // ═══════════════════════════════════════════
+    // State
+    // ═══════════════════════════════════════════
+    var vitals = [];
+    var medications = [];
+    var appointments = [];
+    var emergencyCards = [];
+    var familyMembers = [];
+    var currentView = 'dashboard';
+    var vitalFilter = '';
+
+    // ═══════════════════════════════════════════
+    // Navigation
+    // ═══════════════════════════════════════════
     function switchView(viewName) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      const viewEl = document.getElementById('view-' + viewName);
+      currentView = viewName;
+      document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
+      document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+      var viewEl = document.getElementById('view-' + viewName);
       if (viewEl) viewEl.classList.add('active');
-      const tabEl = document.querySelector(`.nav-tab[data-view="${viewName}"]`);
+      var tabEl = document.querySelector('.nav-tab[data-view="' + viewName + '"]');
       if (tabEl) tabEl.classList.add('active');
+      render();
     }
 
-    // ─── Logout ───
-    async function logout() {
-      try { await api('/api/auth/logout', { method: 'POST' }); } catch {}
+    document.querySelectorAll('.nav-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() { switchView(this.dataset.view); });
+    });
+
+    // ═══════════════════════════════════════════
+    // Modal
+    // ═══════════════════════════════════════════
+    function openModal(html) {
+      document.getElementById('modal-content').innerHTML = html;
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+      document.getElementById('modal-content').innerHTML = '';
+    }
+    document.getElementById('modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // ═══════════════════════════════════════════
+    // Helpers
+    // ═══════════════════════════════════════════
+    function fmtDate(d) {
+      if (!d) return '\u2014';
+      try { return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
+      catch(e) { return esc(d); }
+    }
+    function fmtDateTime(d) {
+      if (!d) return '\u2014';
+      try { return new Date(d).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+      catch(e) { return esc(d); }
+    }
+    function fmtTime(t) { return t || ''; }
+    function today() { return new Date().toISOString().slice(0, 10); }
+    function nowISO() { return new Date().toISOString(); }
+
+    var vitalTypeLabels = {
+      blood_pressure: 'Blood Pressure', blood_sugar: 'Blood Sugar', weight: 'Weight',
+      temperature: 'Temperature', spo2: 'SpO2', heart_rate: 'Heart Rate', bmi: 'BMI'
+    };
+    var vitalUnits = {
+      blood_pressure: 'mmHg', blood_sugar: 'mg/dL', weight: 'kg',
+      temperature: '\u00b0F', spo2: '%', heart_rate: 'bpm', bmi: 'kg/m\u00b2'
+    };
+    var appointmentTypeLabels = {
+      checkup: 'Checkup', follow_up: 'Follow-up', specialist: 'Specialist', lab_test: 'Lab Test',
+      vaccination: 'Vaccination', dental: 'Dental', eye: 'Eye', emergency: 'Emergency', other: 'Other'
+    };
+    var frequencyLabels = {
+      daily: 'Daily', twice_daily: 'Twice Daily', thrice_daily: '3x Daily',
+      weekly: 'Weekly', monthly: 'Monthly', as_needed: 'As Needed', custom: 'Custom'
+    };
+
+    function getMemberName(id) {
+      if (!id) return 'Self';
+      var m = familyMembers.find(function(f) { return f.id === id; });
+      return m ? m.name : 'Unknown';
+    }
+
+    // ═══════════════════════════════════════════
+    // Data Fetching
+    // ═══════════════════════════════════════════
+    async function loadVitals() {
+      try {
+        var q = '?limit=100&sort=measured_at&order=desc';
+        if (vitalFilter) q += '&type=' + encodeURIComponent(vitalFilter);
+        var res = await api('/api/vitals' + q);
+        vitals = res.data || [];
+      } catch(e) { showToast('Failed to load vitals: ' + e.message, 'error'); }
+    }
+    async function loadMedications() {
+      try {
+        var res = await api('/api/medications?limit=100');
+        medications = res.data || [];
+      } catch(e) { showToast('Failed to load medications: ' + e.message, 'error'); }
+    }
+    async function loadAppointments() {
+      try {
+        var res = await api('/api/appointments?limit=100&sort=appointment_date&order=desc');
+        appointments = res.data || [];
+      } catch(e) { showToast('Failed to load appointments: ' + e.message, 'error'); }
+    }
+    async function loadEmergencyCards() {
+      try {
+        var res = await api('/api/emergency-cards');
+        emergencyCards = res.data || [];
+      } catch(e) { showToast('Failed to load emergency cards: ' + e.message, 'error'); }
+    }
+    async function loadFamilyMembers() {
+      try {
+        var res = await api('/api/family-members');
+        familyMembers = res.data || [];
+      } catch(e) { showToast('Failed to load family members: ' + e.message, 'error'); }
+    }
+    async function loadAll() {
+      await Promise.all([loadVitals(), loadMedications(), loadAppointments(), loadEmergencyCards(), loadFamilyMembers()]);
+      render();
+    }
+
+    // ═══════════════════════════════════════════
+    // Render Engine
+    // ═══════════════════════════════════════════
+    function render() {
+      switch (currentView) {
+        case 'dashboard': renderDashboard(); break;
+        case 'vitals': renderVitals(); break;
+        case 'medications': renderMedications(); break;
+        case 'appointments': renderAppointments(); break;
+        case 'emergency': renderEmergency(); break;
+        case 'family': renderFamily(); break;
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // Dashboard
+    // ═══════════════════════════════════════════
+    function renderDashboard() {
+      var activeMeds = medications.filter(function(m) { return m.is_active === 1; }).length;
+      var upcomingAppts = appointments.filter(function(a) { return a.status === 'scheduled' && a.appointment_date >= today(); }).length;
+      var recentVitals = vitals.slice(0, 5);
+
+      var h = '<div class="stats-grid">';
+      h += '<div class="stat-card"><div class="stat-value">' + esc(String(vitals.length)) + '</div><div class="stat-label">Total Vitals Logged</div></div>';
+      h += '<div class="stat-card"><div class="stat-value">' + esc(String(activeMeds)) + '</div><div class="stat-label">Active Medications</div></div>';
+      h += '<div class="stat-card"><div class="stat-value">' + esc(String(upcomingAppts)) + '</div><div class="stat-label">Upcoming Appointments</div></div>';
+      h += '<div class="stat-card"><div class="stat-value">' + esc(String(emergencyCards.length)) + '</div><div class="stat-label">Emergency Cards</div></div>';
+      h += '</div>';
+
+      h += '<div class="card"><div class="card-header"><h3><span class="material-icons-round" style="color:var(--primary)">add_circle</span> Quick Log Vital</h3></div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Type</label><select id="ql-type">';
+      Object.keys(vitalTypeLabels).forEach(function(k) { h += '<option value="' + esc(k) + '">' + esc(vitalTypeLabels[k]) + '</option>'; });
+      h += '</select></div>';
+      h += '<div class="form-group"><label>Value</label><input type="number" id="ql-value" step="0.1" placeholder="Enter value"></div>';
+      h += '</div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Secondary (BP diastolic)</label><input type="number" id="ql-secondary" step="0.1" placeholder="Optional"></div>';
+      h += '<div class="form-group"><label>Notes</label><input type="text" id="ql-notes" placeholder="Optional notes" maxlength="1000"></div>';
+      h += '</div>';
+      h += '<button class="btn btn-primary" id="ql-save"><span class="material-icons-round" style="font-size:16px">save</span> Save Vital</button>';
+      h += '</div>';
+
+      h += '<div class="card"><h3><span class="material-icons-round" style="color:var(--primary)">timeline</span> Recent Vitals</h3>';
+      if (recentVitals.length === 0) {
+        h += '<p style="color:var(--text-secondary);text-align:center;padding:16px">No vitals logged yet. Use Quick Log above!</p>';
+      } else {
+        h += '<table class="data-table"><thead><tr><th>Type</th><th>Value</th><th>When</th><th>For</th></tr></thead><tbody>';
+        recentVitals.forEach(function(v) {
+          var val = esc(String(v.value));
+          if (v.value_secondary) val += '/' + esc(String(v.value_secondary));
+          val += ' ' + esc(vitalUnits[v.type] || '');
+          h += '<tr><td>' + esc(vitalTypeLabels[v.type] || v.type) + '</td><td><strong>' + val + '</strong></td><td>' + esc(fmtDateTime(v.measured_at)) + '</td><td>' + esc(getMemberName(v.family_member_id)) + '</td></tr>';
+        });
+        h += '</tbody></table>';
+      }
+      h += '</div>';
+
+      document.getElementById('view-dashboard').innerHTML = h;
+
+      var qlSave = document.getElementById('ql-save');
+      if (qlSave) {
+        qlSave.addEventListener('click', async function() {
+          var type = document.getElementById('ql-type').value;
+          var value = parseFloat(document.getElementById('ql-value').value);
+          if (isNaN(value)) { showToast('Please enter a value', 'error'); return; }
+          var body = { type: type, value: value, measured_at: nowISO(), unit: vitalUnits[type] || '' };
+          var sec = document.getElementById('ql-secondary').value;
+          if (sec) body.value_secondary = parseFloat(sec);
+          var notes = document.getElementById('ql-notes').value;
+          if (notes) body.notes = notes;
+          try {
+            await api('/api/vitals', { method: 'POST', body: JSON.stringify(body) });
+            showToast('Vital logged!', 'success');
+            await loadVitals();
+            renderDashboard();
+          } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        });
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // Vitals View
+    // ═══════════════════════════════════════════
+    function renderVitals() {
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">favorite</span> Vitals</h3>';
+      h += '<button class="btn btn-primary" id="add-vital-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Vital</button></div>';
+
+      h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Filter:</label>';
+      h += '<select id="vital-filter"><option value="">All Types</option>';
+      Object.keys(vitalTypeLabels).forEach(function(k) {
+        h += '<option value="' + esc(k) + '"' + (vitalFilter === k ? ' selected' : '') + '>' + esc(vitalTypeLabels[k]) + '</option>';
+      });
+      h += '</select></div>';
+
+      if (vitals.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">favorite</span><h3>No vitals recorded</h3><p>Start tracking your health by adding your first vital sign.</p></div>';
+      } else {
+        h += '<div class="card" style="padding:0;overflow-x:auto"><table class="data-table"><thead><tr><th>Type</th><th>Value</th><th>Measured</th><th>For</th><th>Notes</th><th>Actions</th></tr></thead><tbody>';
+        vitals.forEach(function(v) {
+          var val = esc(String(v.value));
+          if (v.value_secondary) val += '/' + esc(String(v.value_secondary));
+          val += ' ' + esc(vitalUnits[v.type] || v.unit || '');
+          h += '<tr>';
+          h += '<td>' + esc(vitalTypeLabels[v.type] || v.type) + '</td>';
+          h += '<td><strong>' + val + '</strong></td>';
+          h += '<td>' + esc(fmtDateTime(v.measured_at)) + '</td>';
+          h += '<td>' + esc(getMemberName(v.family_member_id)) + '</td>';
+          h += '<td>' + esc(v.notes || '') + '</td>';
+          h += '<td class="actions"><button class="btn-icon edit-vital" data-id="' + escA(v.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-vital" data-id="' + escA(v.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td>';
+          h += '</tr>';
+        });
+        h += '</tbody></table></div>';
+      }
+
+      document.getElementById('view-vitals').innerHTML = h;
+      document.getElementById('add-vital-btn').addEventListener('click', function() { openVitalForm(); });
+      document.getElementById('vital-filter').addEventListener('change', async function() {
+        vitalFilter = this.value; await loadVitals(); renderVitals();
+      });
+      document.querySelectorAll('.edit-vital').forEach(function(btn) {
+        btn.addEventListener('click', function() { var v = vitals.find(function(x) { return x.id === btn.dataset.id; }); if (v) openVitalForm(v); });
+      });
+      document.querySelectorAll('.del-vital').forEach(function(btn) {
+        btn.addEventListener('click', function() { deleteVital(btn.dataset.id); });
+      });
+    }
+
+    function openVitalForm(existing) {
+      var isEdit = !!existing;
+      var h = '<h3>' + (isEdit ? 'Edit Vital' : 'Add Vital') + '</h3>';
+      h += '<div class="form-group"><label>Type</label><select id="vf-type">';
+      Object.keys(vitalTypeLabels).forEach(function(k) {
+        h += '<option value="' + esc(k) + '"' + (existing && existing.type === k ? ' selected' : '') + '>' + esc(vitalTypeLabels[k]) + '</option>';
+      });
+      h += '</select></div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Value *</label><input type="number" id="vf-value" step="0.1" value="' + escA(existing ? existing.value : '') + '" required></div>';
+      h += '<div class="form-group"><label>Secondary (e.g. diastolic)</label><input type="number" id="vf-secondary" step="0.1" value="' + escA(existing && existing.value_secondary ? existing.value_secondary : '') + '"></div>';
+      h += '</div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Date/Time</label><input type="datetime-local" id="vf-measured" value="' + escA(existing ? (existing.measured_at || '').slice(0, 16) : new Date().toISOString().slice(0, 16)) + '"></div>';
+      h += '<div class="form-group"><label>Family Member</label><select id="vf-member"><option value="">Self</option>';
+      familyMembers.forEach(function(m) { h += '<option value="' + escA(m.id) + '"' + (existing && existing.family_member_id === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="vf-notes" maxlength="1000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="vf-cancel">Cancel</button><button class="btn btn-primary" id="vf-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('vf-cancel').addEventListener('click', closeModal);
+      document.getElementById('vf-save').addEventListener('click', async function() {
+        var value = parseFloat(document.getElementById('vf-value').value);
+        if (isNaN(value)) { showToast('Value is required', 'error'); return; }
+        var body = { type: document.getElementById('vf-type').value, value: value, measured_at: new Date(document.getElementById('vf-measured').value).toISOString(), notes: document.getElementById('vf-notes').value, unit: vitalUnits[document.getElementById('vf-type').value] || '' };
+        var sec = document.getElementById('vf-secondary').value;
+        if (sec) body.value_secondary = parseFloat(sec);
+        var mem = document.getElementById('vf-member').value;
+        if (mem) body.family_member_id = mem;
+        try {
+          if (isEdit) { await api('/api/vitals/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Vital updated', 'success'); }
+          else { await api('/api/vitals', { method: 'POST', body: JSON.stringify(body) }); showToast('Vital added', 'success'); }
+          closeModal(); await loadVitals(); renderVitals();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function deleteVital(id) {
+      if (!confirm('Delete this vital record?')) return;
+      try { await api('/api/vitals/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Vital deleted', 'success'); await loadVitals(); renderVitals(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // Medications View
+    // ═══════════════════════════════════════════
+    function renderMedications() {
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">medication</span> Medications</h3>';
+      h += '<button class="btn btn-primary" id="add-med-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Medication</button></div>';
+      if (medications.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">medication</span><h3>No medications</h3><p>Add your medications to track dosages and refills.</p></div>';
+      } else {
+        h += '<div class="med-cards">';
+        medications.forEach(function(m) {
+          var statusClass = m.is_active === 1 ? '' : 'stopped';
+          var statusBadge = m.is_active === 1 ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-stopped">Stopped</span>';
+          h += '<div class="med-card ' + statusClass + '">';
+          h += '<div class="med-card-header"><span class="med-card-name">' + esc(m.name) + '</span>' + statusBadge + '</div>';
+          if (m.dosage) h += '<div class="med-card-detail"><strong>Dosage:</strong> ' + esc(m.dosage) + '</div>';
+          h += '<div class="med-card-detail"><strong>Frequency:</strong> ' + esc(frequencyLabels[m.frequency] || m.frequency) + '</div>';
+          if (m.prescribing_doctor) h += '<div class="med-card-detail"><strong>Doctor:</strong> ' + esc(m.prescribing_doctor) + '</div>';
+          if (m.refill_date) h += '<div class="med-card-detail"><strong>Next Refill:</strong> ' + esc(fmtDate(m.refill_date)) + '</div>';
+          if (m.family_member_id) h += '<div class="med-card-detail"><strong>For:</strong> ' + esc(getMemberName(m.family_member_id)) + '</div>';
+          h += '<div class="med-card-actions">';
+          h += '<button class="btn btn-sm btn-secondary edit-med" data-id="' + escA(m.id) + '"><span class="material-icons-round" style="font-size:14px">edit</span> Edit</button>';
+          if (m.is_active === 1) {
+            h += '<button class="btn btn-sm btn-warning stop-med" data-id="' + escA(m.id) + '"><span class="material-icons-round" style="font-size:14px">pause</span> Stop</button>';
+          } else {
+            h += '<button class="btn btn-sm btn-success start-med" data-id="' + escA(m.id) + '"><span class="material-icons-round" style="font-size:14px">play_arrow</span> Restart</button>';
+          }
+          h += '<button class="btn btn-sm btn-danger del-med" data-id="' + escA(m.id) + '"><span class="material-icons-round" style="font-size:14px">delete</span></button>';
+          h += '</div></div>';
+        });
+        h += '</div>';
+      }
+      document.getElementById('view-medications').innerHTML = h;
+      document.getElementById('add-med-btn').addEventListener('click', function() { openMedForm(); });
+      document.querySelectorAll('.edit-med').forEach(function(btn) {
+        btn.addEventListener('click', function() { var m = medications.find(function(x) { return x.id === btn.dataset.id; }); if (m) openMedForm(m); });
+      });
+      document.querySelectorAll('.stop-med').forEach(function(btn) {
+        btn.addEventListener('click', function() { toggleMed(btn.dataset.id, 0); });
+      });
+      document.querySelectorAll('.start-med').forEach(function(btn) {
+        btn.addEventListener('click', function() { toggleMed(btn.dataset.id, 1); });
+      });
+      document.querySelectorAll('.del-med').forEach(function(btn) {
+        btn.addEventListener('click', function() { deleteMed(btn.dataset.id); });
+      });
+    }
+
+    function openMedForm(existing) {
+      var isEdit = !!existing;
+      var h = '<h3>' + (isEdit ? 'Edit Medication' : 'Add Medication') + '</h3>';
+      h += '<div class="form-group"><label>Name *</label><input type="text" id="mf-name" maxlength="200" value="' + escA(existing ? existing.name : '') + '" required></div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Dosage</label><input type="text" id="mf-dosage" maxlength="100" value="' + escA(existing ? existing.dosage : '') + '" placeholder="e.g. 500mg"></div>';
+      h += '<div class="form-group"><label>Frequency</label><select id="mf-frequency">';
+      Object.keys(frequencyLabels).forEach(function(k) { h += '<option value="' + esc(k) + '"' + (existing && existing.frequency === k ? ' selected' : '') + '>' + esc(frequencyLabels[k]) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Start Date</label><input type="date" id="mf-start" value="' + escA(existing ? existing.start_date || '' : today()) + '"></div>';
+      h += '<div class="form-group"><label>End Date</label><input type="date" id="mf-end" value="' + escA(existing && existing.end_date ? existing.end_date : '') + '"></div>';
+      h += '</div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Prescribing Doctor</label><input type="text" id="mf-doctor" maxlength="200" value="' + escA(existing ? existing.prescribing_doctor : '') + '"></div>';
+      h += '<div class="form-group"><label>Pharmacy</label><input type="text" id="mf-pharmacy" maxlength="200" value="' + escA(existing ? existing.pharmacy : '') + '"></div>';
+      h += '</div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Refill Date</label><input type="date" id="mf-refill" value="' + escA(existing && existing.refill_date ? existing.refill_date : '') + '"></div>';
+      h += '<div class="form-group"><label>Family Member</label><select id="mf-member"><option value="">Self</option>';
+      familyMembers.forEach(function(m) { h += '<option value="' + escA(m.id) + '"' + (existing && existing.family_member_id === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="mf-notes" maxlength="1000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="mf-cancel">Cancel</button><button class="btn btn-primary" id="mf-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('mf-cancel').addEventListener('click', closeModal);
+      document.getElementById('mf-save').addEventListener('click', async function() {
+        var name = document.getElementById('mf-name').value.trim();
+        if (!name) { showToast('Name is required', 'error'); return; }
+        var body = { name: name, dosage: document.getElementById('mf-dosage').value, frequency: document.getElementById('mf-frequency').value, prescribing_doctor: document.getElementById('mf-doctor').value, pharmacy: document.getElementById('mf-pharmacy').value, notes: document.getElementById('mf-notes').value };
+        var start = document.getElementById('mf-start').value; if (start) body.start_date = start;
+        var end = document.getElementById('mf-end').value; if (end) body.end_date = end;
+        var refill = document.getElementById('mf-refill').value; if (refill) body.refill_date = refill;
+        var mem = document.getElementById('mf-member').value; if (mem) body.family_member_id = mem;
+        try {
+          if (isEdit) { await api('/api/medications/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Medication updated', 'success'); }
+          else { await api('/api/medications', { method: 'POST', body: JSON.stringify(body) }); showToast('Medication added', 'success'); }
+          closeModal(); await loadMedications(); renderMedications();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function toggleMed(id, active) {
+      try { await api('/api/medications/' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify({ is_active: active }) }); showToast(active ? 'Medication restarted' : 'Medication stopped', 'success'); await loadMedications(); render(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    async function deleteMed(id) {
+      if (!confirm('Delete this medication?')) return;
+      try { await api('/api/medications/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Medication deleted', 'success'); await loadMedications(); renderMedications(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // Appointments View
+    // ═══════════════════════════════════════════
+    function renderAppointments() {
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">calendar_today</span> Appointments</h3>';
+      h += '<button class="btn btn-primary" id="add-appt-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Appointment</button></div>';
+      if (appointments.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">calendar_today</span><h3>No appointments</h3><p>Schedule your next doctor visit.</p></div>';
+      } else {
+        var groups = {};
+        appointments.forEach(function(a) { var dk = a.appointment_date || 'Unknown'; if (!groups[dk]) groups[dk] = []; groups[dk].push(a); });
+        var sortedDates = Object.keys(groups).sort().reverse();
+        sortedDates.forEach(function(dk) {
+          h += '<div class="appt-group"><div class="appt-group-header">' + esc(fmtDate(dk)) + '</div>';
+          groups[dk].forEach(function(a) {
+            var sc = 'badge-' + a.status;
+            h += '<div class="appt-card"><div class="appt-time">' + esc(fmtTime(a.appointment_time) || '\u2014') + '</div>';
+            h += '<div class="appt-info"><h4>' + esc(a.doctor_name) + '</h4><div class="appt-meta">';
+            h += '<span class="badge ' + sc + '">' + esc(a.status) + '</span> ';
+            h += '<span>' + esc(appointmentTypeLabels[a.type] || a.type) + '</span>';
+            if (a.hospital) h += ' \u00b7 ' + esc(a.hospital);
+            if (a.location) h += ' \u00b7 ' + esc(a.location);
+            if (a.family_member_id) h += ' \u00b7 For: ' + esc(getMemberName(a.family_member_id));
+            h += '</div>';
+            if (a.notes) h += '<div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px">' + esc(a.notes) + '</div>';
+            h += '</div>';
+            h += '<div style="display:flex;gap:4px">';
+            h += '<button class="btn-icon edit-appt" data-id="' + escA(a.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+            h += '<button class="btn-icon del-appt" data-id="' + escA(a.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button>';
+            h += '</div></div>';
+          });
+          h += '</div>';
+        });
+      }
+      document.getElementById('view-appointments').innerHTML = h;
+      document.getElementById('add-appt-btn').addEventListener('click', function() { openApptForm(); });
+      document.querySelectorAll('.edit-appt').forEach(function(btn) {
+        btn.addEventListener('click', function() { var a = appointments.find(function(x) { return x.id === btn.dataset.id; }); if (a) openApptForm(a); });
+      });
+      document.querySelectorAll('.del-appt').forEach(function(btn) {
+        btn.addEventListener('click', function() { deleteAppt(btn.dataset.id); });
+      });
+    }
+
+    function openApptForm(existing) {
+      var isEdit = !!existing;
+      var h = '<h3>' + (isEdit ? 'Edit Appointment' : 'Add Appointment') + '</h3>';
+      h += '<div class="form-group"><label>Doctor Name *</label><input type="text" id="af-doctor" maxlength="200" value="' + escA(existing ? existing.doctor_name : '') + '" required></div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Hospital</label><input type="text" id="af-hospital" maxlength="300" value="' + escA(existing ? existing.hospital : '') + '"></div>';
+      h += '<div class="form-group"><label>Type</label><select id="af-type">';
+      Object.keys(appointmentTypeLabels).forEach(function(k) { h += '<option value="' + esc(k) + '"' + (existing && existing.type === k ? ' selected' : '') + '>' + esc(appointmentTypeLabels[k]) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Date *</label><input type="date" id="af-date" value="' + escA(existing ? existing.appointment_date : '') + '" required></div>';
+      h += '<div class="form-group"><label>Time</label><input type="time" id="af-time" value="' + escA(existing && existing.appointment_time ? existing.appointment_time : '') + '"></div>';
+      h += '</div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Location</label><input type="text" id="af-location" maxlength="500" value="' + escA(existing ? existing.location : '') + '"></div>';
+      h += '<div class="form-group"><label>Status</label><select id="af-status">';
+      ['scheduled','completed','cancelled','rescheduled'].forEach(function(s) { h += '<option value="' + esc(s) + '"' + (existing && existing.status === s ? ' selected' : '') + '>' + esc(s.charAt(0).toUpperCase() + s.slice(1)) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-group"><label>Family Member</label><select id="af-member"><option value="">Self</option>';
+      familyMembers.forEach(function(m) { h += '<option value="' + escA(m.id) + '"' + (existing && existing.family_member_id === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; });
+      h += '</select></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="af-notes" maxlength="2000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="af-cancel">Cancel</button><button class="btn btn-primary" id="af-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('af-cancel').addEventListener('click', closeModal);
+      document.getElementById('af-save').addEventListener('click', async function() {
+        var doctor = document.getElementById('af-doctor').value.trim();
+        var date = document.getElementById('af-date').value;
+        if (!doctor) { showToast('Doctor name is required', 'error'); return; }
+        if (!date) { showToast('Date is required', 'error'); return; }
+        var body = { doctor_name: doctor, hospital: document.getElementById('af-hospital').value, type: document.getElementById('af-type').value, appointment_date: date, location: document.getElementById('af-location').value, status: document.getElementById('af-status').value, notes: document.getElementById('af-notes').value };
+        var time = document.getElementById('af-time').value; if (time) body.appointment_time = time;
+        var mem = document.getElementById('af-member').value; if (mem) body.family_member_id = mem;
+        try {
+          if (isEdit) { await api('/api/appointments/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Appointment updated', 'success'); }
+          else { await api('/api/appointments', { method: 'POST', body: JSON.stringify(body) }); showToast('Appointment added', 'success'); }
+          closeModal(); await loadAppointments(); renderAppointments();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function deleteAppt(id) {
+      if (!confirm('Delete this appointment?')) return;
+      try { await api('/api/appointments/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Appointment deleted', 'success'); await loadAppointments(); renderAppointments(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // Emergency Cards View
+    // ═══════════════════════════════════════════
+    function renderEmergency() {
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--danger)">emergency</span> Emergency Health Cards</h3>';
+      h += '<div style="display:flex;gap:8px">';
+      h += '<button class="btn btn-secondary" id="print-ec-btn"><span class="material-icons-round" style="font-size:16px">print</span> Print</button>';
+      h += '<button class="btn btn-primary" id="add-ec-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Card</button>';
+      h += '</div></div>';
+      if (emergencyCards.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">emergency</span><h3>No emergency cards</h3><p>Create an emergency health card with allergies, blood type, and contacts.</p></div>';
+      } else {
+        h += '<div class="ec-cards">';
+        emergencyCards.forEach(function(c) {
+          h += '<div class="ec-card"><div class="ec-card-header"><h4><span class="material-icons-round" style="font-size:20px;color:var(--danger)">emergency</span> ' + esc(getMemberName(c.family_member_id)) + '</h4>';
+          h += '<div style="display:flex;gap:4px">';
+          h += '<button class="btn-icon edit-ec" data-id="' + escA(c.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-ec" data-id="' + escA(c.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button>';
+          h += '</div></div>';
+          if (c.blood_type && c.blood_type !== 'unknown') h += '<div class="ec-field"><div class="ec-field-label">Blood Type</div><div class="ec-field-value" style="font-size:1.2rem;font-weight:700;color:var(--danger)">' + esc(c.blood_type) + '</div></div>';
+          if (c.allergies) h += '<div class="ec-field"><div class="ec-field-label">Allergies</div><div class="ec-field-value">' + esc(c.allergies) + '</div></div>';
+          if (c.chronic_conditions) h += '<div class="ec-field"><div class="ec-field-label">Chronic Conditions</div><div class="ec-field-value">' + esc(c.chronic_conditions) + '</div></div>';
+          if (c.current_medications) h += '<div class="ec-field"><div class="ec-field-label">Current Medications</div><div class="ec-field-value">' + esc(c.current_medications) + '</div></div>';
+          if (c.emergency_contact_name) {
+            h += '<div class="ec-field"><div class="ec-field-label">Emergency Contact</div><div class="ec-field-value">' + esc(c.emergency_contact_name);
+            if (c.emergency_contact_phone) h += ' \u2014 ' + esc(c.emergency_contact_phone);
+            if (c.emergency_contact_relation) h += ' (' + esc(c.emergency_contact_relation) + ')';
+            h += '</div></div>';
+          }
+          if (c.secondary_contact_name) {
+            h += '<div class="ec-field"><div class="ec-field-label">Secondary Contact</div><div class="ec-field-value">' + esc(c.secondary_contact_name);
+            if (c.secondary_contact_phone) h += ' \u2014 ' + esc(c.secondary_contact_phone);
+            h += '</div></div>';
+          }
+          if (c.insurance_provider) {
+            h += '<div class="ec-field"><div class="ec-field-label">Insurance</div><div class="ec-field-value">' + esc(c.insurance_provider);
+            if (c.insurance_policy_number) h += ' #' + esc(c.insurance_policy_number);
+            h += '</div></div>';
+          }
+          if (c.primary_doctor) {
+            h += '<div class="ec-field"><div class="ec-field-label">Primary Doctor</div><div class="ec-field-value">' + esc(c.primary_doctor);
+            if (c.primary_doctor_phone) h += ' \u2014 ' + esc(c.primary_doctor_phone);
+            h += '</div></div>';
+          }
+          h += '<div class="ec-field"><div class="ec-field-label">Organ Donor</div><div class="ec-field-value">' + (c.organ_donor ? 'Yes' : 'No') + '</div></div>';
+          if (c.notes) h += '<div class="ec-field"><div class="ec-field-label">Notes</div><div class="ec-field-value">' + esc(c.notes) + '</div></div>';
+          h += '</div>';
+        });
+        h += '</div>';
+      }
+      document.getElementById('view-emergency').innerHTML = h;
+      document.getElementById('add-ec-btn').addEventListener('click', function() { openEcForm(); });
+      document.getElementById('print-ec-btn').addEventListener('click', function() { window.print(); });
+      document.querySelectorAll('.edit-ec').forEach(function(btn) {
+        btn.addEventListener('click', function() { var c = emergencyCards.find(function(x) { return x.id === btn.dataset.id; }); if (c) openEcForm(c); });
+      });
+      document.querySelectorAll('.del-ec').forEach(function(btn) {
+        btn.addEventListener('click', function() { deleteEc(btn.dataset.id); });
+      });
+    }
+
+    function openEcForm(existing) {
+      var isEdit = !!existing;
+      var bts = ['unknown','A+','A-','B+','B-','AB+','AB-','O+','O-'];
+      var h = '<h3>' + (isEdit ? 'Edit Emergency Card' : 'Add Emergency Card') + '</h3>';
+      h += '<div class="form-row"><div class="form-group"><label>Blood Type</label><select id="ef-blood">';
+      bts.forEach(function(bt) { h += '<option value="' + esc(bt) + '"' + (existing && existing.blood_type === bt ? ' selected' : '') + '>' + esc(bt) + '</option>'; });
+      h += '</select></div>';
+      h += '<div class="form-group"><label>Family Member</label><select id="ef-member"><option value="">Self</option>';
+      familyMembers.forEach(function(m) { h += '<option value="' + escA(m.id) + '"' + (existing && existing.family_member_id === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-group"><label>Allergies</label><textarea id="ef-allergies" maxlength="2000" placeholder="e.g. Penicillin, Peanuts">' + esc(existing ? existing.allergies : '') + '</textarea></div>';
+      h += '<div class="form-group"><label>Chronic Conditions</label><textarea id="ef-conditions" maxlength="2000">' + esc(existing ? existing.chronic_conditions : '') + '</textarea></div>';
+      h += '<div class="form-group"><label>Current Medications</label><textarea id="ef-meds" maxlength="2000">' + esc(existing ? existing.current_medications : '') + '</textarea></div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Emergency Contact Name</label><input type="text" id="ef-ename" maxlength="200" value="' + escA(existing ? existing.emergency_contact_name : '') + '"></div>';
+      h += '<div class="form-group"><label>Phone</label><input type="tel" id="ef-ephone" maxlength="30" value="' + escA(existing ? existing.emergency_contact_phone : '') + '"></div>';
+      h += '</div>';
+      h += '<div class="form-group"><label>Relation</label><input type="text" id="ef-erelation" maxlength="100" value="' + escA(existing ? existing.emergency_contact_relation : '') + '" placeholder="e.g. Spouse, Parent"></div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Secondary Contact</label><input type="text" id="ef-sname" maxlength="200" value="' + escA(existing ? existing.secondary_contact_name : '') + '"></div>';
+      h += '<div class="form-group"><label>Phone</label><input type="tel" id="ef-sphone" maxlength="30" value="' + escA(existing ? existing.secondary_contact_phone : '') + '"></div>';
+      h += '</div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Insurance Provider</label><input type="text" id="ef-ins" maxlength="200" value="' + escA(existing ? existing.insurance_provider : '') + '"></div>';
+      h += '<div class="form-group"><label>Policy #</label><input type="text" id="ef-policy" maxlength="100" value="' + escA(existing ? existing.insurance_policy_number : '') + '"></div>';
+      h += '</div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Primary Doctor</label><input type="text" id="ef-doctor" maxlength="200" value="' + escA(existing ? existing.primary_doctor : '') + '"></div>';
+      h += '<div class="form-group"><label>Doctor Phone</label><input type="tel" id="ef-dphone" maxlength="30" value="' + escA(existing ? existing.primary_doctor_phone : '') + '"></div>';
+      h += '</div>';
+      h += '<div class="form-group"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="ef-donor"' + (existing && existing.organ_donor ? ' checked' : '') + '> Organ Donor</label></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="ef-notes" maxlength="2000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="ef-cancel">Cancel</button><button class="btn btn-primary" id="ef-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('ef-cancel').addEventListener('click', closeModal);
+      document.getElementById('ef-save').addEventListener('click', async function() {
+        var body = { blood_type: document.getElementById('ef-blood').value, allergies: document.getElementById('ef-allergies').value, chronic_conditions: document.getElementById('ef-conditions').value, current_medications: document.getElementById('ef-meds').value, emergency_contact_name: document.getElementById('ef-ename').value, emergency_contact_phone: document.getElementById('ef-ephone').value, emergency_contact_relation: document.getElementById('ef-erelation').value, secondary_contact_name: document.getElementById('ef-sname').value, secondary_contact_phone: document.getElementById('ef-sphone').value, insurance_provider: document.getElementById('ef-ins').value, insurance_policy_number: document.getElementById('ef-policy').value, primary_doctor: document.getElementById('ef-doctor').value, primary_doctor_phone: document.getElementById('ef-dphone').value, organ_donor: document.getElementById('ef-donor').checked ? 1 : 0, notes: document.getElementById('ef-notes').value };
+        var mem = document.getElementById('ef-member').value; if (mem) body.family_member_id = mem;
+        try {
+          if (isEdit) { await api('/api/emergency-cards/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Card updated', 'success'); }
+          else { await api('/api/emergency-cards', { method: 'POST', body: JSON.stringify(body) }); showToast('Card created', 'success'); }
+          closeModal(); await loadEmergencyCards(); renderEmergency();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function deleteEc(id) {
+      if (!confirm('Delete this emergency card?')) return;
+      try { await api('/api/emergency-cards/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Card deleted', 'success'); await loadEmergencyCards(); renderEmergency(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // Family Members View
+    // ═══════════════════════════════════════════
+    function renderFamily() {
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">people</span> Family Members</h3>';
+      h += '<button class="btn btn-primary" id="add-fm-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Member</button></div>';
+      if (familyMembers.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">people</span><h3>No family members</h3><p>Add family members to track health data for each person.</p></div>';
+      } else {
+        h += '<div class="med-cards">';
+        familyMembers.forEach(function(m) {
+          h += '<div class="med-card" style="border-left-color:var(--info)">';
+          h += '<div class="med-card-header"><span class="med-card-name">' + esc(m.name) + '</span><span class="badge badge-scheduled">' + esc(m.relation || 'self') + '</span></div>';
+          if (m.date_of_birth) h += '<div class="med-card-detail"><strong>DOB:</strong> ' + esc(fmtDate(m.date_of_birth)) + '</div>';
+          if (m.blood_type && m.blood_type !== 'unknown') h += '<div class="med-card-detail"><strong>Blood Type:</strong> ' + esc(m.blood_type) + '</div>';
+          if (m.gender) h += '<div class="med-card-detail"><strong>Gender:</strong> ' + esc(m.gender) + '</div>';
+          if (m.notes) h += '<div class="med-card-detail">' + esc(m.notes) + '</div>';
+          h += '<div class="med-card-actions">';
+          h += '<button class="btn btn-sm btn-secondary edit-fm" data-id="' + escA(m.id) + '"><span class="material-icons-round" style="font-size:14px">edit</span> Edit</button>';
+          h += '<button class="btn btn-sm btn-danger del-fm" data-id="' + escA(m.id) + '"><span class="material-icons-round" style="font-size:14px">delete</span></button>';
+          h += '</div></div>';
+        });
+        h += '</div>';
+      }
+      document.getElementById('view-family').innerHTML = h;
+      document.getElementById('add-fm-btn').addEventListener('click', function() { openFmForm(); });
+      document.querySelectorAll('.edit-fm').forEach(function(btn) {
+        btn.addEventListener('click', function() { var m = familyMembers.find(function(x) { return x.id === btn.dataset.id; }); if (m) openFmForm(m); });
+      });
+      document.querySelectorAll('.del-fm').forEach(function(btn) {
+        btn.addEventListener('click', function() { deleteFm(btn.dataset.id); });
+      });
+    }
+
+    function openFmForm(existing) {
+      var isEdit = !!existing;
+      var rels = ['self','spouse','child','parent','sibling','grandparent','other'];
+      var genders = ['male','female','other','prefer_not_to_say'];
+      var bts = ['unknown','A+','A-','B+','B-','AB+','AB-','O+','O-'];
+      var h = '<h3>' + (isEdit ? 'Edit Family Member' : 'Add Family Member') + '</h3>';
+      h += '<div class="form-group"><label>Name *</label><input type="text" id="ff-name" maxlength="200" value="' + escA(existing ? existing.name : '') + '" required></div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Relation</label><select id="ff-relation">';
+      rels.forEach(function(r) { h += '<option value="' + esc(r) + '"' + (existing && existing.relation === r ? ' selected' : '') + '>' + esc(r.charAt(0).toUpperCase() + r.slice(1)) + '</option>'; });
+      h += '</select></div>';
+      h += '<div class="form-group"><label>Date of Birth</label><input type="date" id="ff-dob" value="' + escA(existing && existing.date_of_birth ? existing.date_of_birth : '') + '"></div>';
+      h += '</div>';
+      h += '<div class="form-row">';
+      h += '<div class="form-group"><label>Gender</label><select id="ff-gender"><option value="">\u2014</option>';
+      genders.forEach(function(g) { h += '<option value="' + esc(g) + '"' + (existing && existing.gender === g ? ' selected' : '') + '>' + esc(g.replace(/_/g, ' ')) + '</option>'; });
+      h += '</select></div>';
+      h += '<div class="form-group"><label>Blood Type</label><select id="ff-blood"><option value="">\u2014</option>';
+      bts.forEach(function(bt) { h += '<option value="' + esc(bt) + '"' + (existing && existing.blood_type === bt ? ' selected' : '') + '>' + esc(bt) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="ff-notes" maxlength="1000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="ff-cancel">Cancel</button><button class="btn btn-primary" id="ff-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('ff-cancel').addEventListener('click', closeModal);
+      document.getElementById('ff-save').addEventListener('click', async function() {
+        var name = document.getElementById('ff-name').value.trim();
+        if (!name) { showToast('Name is required', 'error'); return; }
+        var body = { name: name, relation: document.getElementById('ff-relation').value, notes: document.getElementById('ff-notes').value };
+        var dob = document.getElementById('ff-dob').value; if (dob) body.date_of_birth = dob;
+        var gender = document.getElementById('ff-gender').value; if (gender) body.gender = gender;
+        var blood = document.getElementById('ff-blood').value; if (blood) body.blood_type = blood;
+        try {
+          if (isEdit) { await api('/api/family-members/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Member updated', 'success'); }
+          else { await api('/api/family-members', { method: 'POST', body: JSON.stringify(body) }); showToast('Member added', 'success'); }
+          closeModal(); await loadFamilyMembers(); renderFamily();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function deleteFm(id) {
+      if (!confirm('Delete this family member? Related health data will be unlinked.')) return;
+      try { await api('/api/family-members/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Member deleted', 'success'); await loadAll(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // Logout
+    // ═══════════════════════════════════════════
+    document.getElementById('logout-btn').addEventListener('click', async function() {
+      try { await api('/api/auth/logout', { method: 'POST' }); } catch(e) { /* ignore */ }
       window.location.href = '/login';
-    }
+    });
 
-    // ─── Init ───
+    // ═══════════════════════════════════════════
+    // Init
+    // ═══════════════════════════════════════════
     async function init() {
       try {
-        const data = await api('/api/auth/me');
-        if (data.user) {
-          document.getElementById('user-email').textContent = esc(data.user.email);
-        }
-      } catch {
-        window.location.href = '/login';
-      }
+        var data = await api('/api/auth/me');
+        if (data.user) document.getElementById('user-email').textContent = data.user.email || '';
+      } catch(e) { window.location.href = '/login'; return; }
+      await loadAll();
     }
     init();
   </script>
