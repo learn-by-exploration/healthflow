@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { validate } = require('../middleware/validate');
-const { createVitalSchema, updateVitalSchema, queryVitalSchema } = require('../schemas/vital.schema');
+const { createVitalSchema, updateVitalSchema, queryVitalSchema, queryTrendsSchema } = require('../schemas/vital.schema');
 const VitalRepo = require('../repos/vital.repo');
 const VitalService = require('../services/vital.service');
 
@@ -11,6 +11,12 @@ module.exports = function vitalsRoutes({ db }) {
   // ─── List vitals ───
   router.get('/api/vitals', validate(queryVitalSchema, 'query'), (req, res) => {
     const result = service.list(req.userId, req.query);
+    res.json(result);
+  });
+
+  // ─── Get vitals trends (aggregated) ───
+  router.get('/api/vitals/trends', validate(queryTrendsSchema, 'query'), (req, res) => {
+    const result = service.getTrends(req.userId, req.query);
     res.json(result);
   });
 

@@ -25,4 +25,11 @@ const queryVitalSchema = z.object({
   order: z.enum(['asc', 'desc']).optional(),
 });
 
-module.exports = { createVitalSchema, updateVitalSchema, queryVitalSchema, vitalTypes };
+const queryTrendsSchema = z.object({
+  type: z.enum(vitalTypes).optional(),
+  family_member_id: z.string().uuid().optional(),
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
+module.exports = { createVitalSchema, updateVitalSchema, queryVitalSchema, queryTrendsSchema, vitalTypes };

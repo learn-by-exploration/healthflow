@@ -82,6 +82,32 @@ class VitalRepo {
   delete(id, userId) {
     return this.stmts.delete.run(id, userId);
   }
+
+  getTrends(userId, filters = {}) {
+    let where = 'WHERE user_id = ?';
+    const params = [userId];
+
+    if (filters.type) { where += ' AND type = ?'; params.push(filters.type); }
+    if (filters.family_member_id) { where += ' AND family_member_id = ?'; params.push(filters.family_member_id); }
+    if (filters.from) { where += ' AND measured_at >= ?'; params.push(filters.from + 'T00:00:00.000Z'); }
+    if (filters.to) { where += ' AND measured_at <= ?'; params.push(filters.to + 'T23:59:59.999Z'); }
+
+    const rows = this.db.prepare(`
+      SELECT type, 
+             COUNT(*) as count,
+             ROUND(AVG(value), 2) as avg_value,
+             MIN(value) as min_value,
+             MAX(value) as max_value,
+             ROUND(AVG(value_secondary), 2) as avg_secondary,
+             MIN(value_secondary) as min_secondary,
+             MAX(value_secondary) as max_secondary
+      FROM vitals ${where}
+      GROUP BY type
+      ORDER BY type
+    `).all(...params);
+
+    return { data: rows };
+  }
 }
 
 module.exports = VitalRepo;

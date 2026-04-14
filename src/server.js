@@ -41,7 +41,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "blob:"],
       connectSrc: ["'self'"],
@@ -133,6 +133,11 @@ app.use(require('./routes/medications')(deps));
 app.use(require('./routes/appointments')(deps));
 app.use(require('./routes/emergency-cards')(deps));
 app.use(require('./routes/family-members')(deps));
+app.use(require('./routes/conditions')(deps));
+app.use(require('./routes/allergies')(deps));
+app.use(require('./routes/documents')(deps));
+app.use(require('./routes/medical-expenses')(deps));
+app.use(require('./routes/first-aid')(deps));
 
 // ─── Shareable emergency card (public, no auth) ───
 const emergencyCardService = new EmergencyCardService(new EmergencyCardRepo(db));

@@ -1,11 +1,11 @@
 const { NotFoundError } = require('../errors');
 
 /**
- * Vitals Service — business logic for vitals tracking.
+ * Health Conditions Service — business logic for health conditions tracking.
  */
-class VitalService {
-  constructor(vitalRepo) {
-    this.repo = vitalRepo;
+class ConditionService {
+  constructor(repo) {
+    this.repo = repo;
   }
 
   create(userId, data) {
@@ -13,9 +13,9 @@ class VitalService {
   }
 
   getById(id, userId) {
-    const vital = this.repo.findById(id, userId);
-    if (!vital) throw new NotFoundError('Vital', id);
-    return vital;
+    const condition = this.repo.findById(id, userId);
+    if (!condition) throw new NotFoundError('Health condition', id);
+    return condition;
   }
 
   list(userId, filters) {
@@ -24,20 +24,16 @@ class VitalService {
 
   update(id, userId, data) {
     const existing = this.repo.findById(id, userId);
-    if (!existing) throw new NotFoundError('Vital', id);
+    if (!existing) throw new NotFoundError('Health condition', id);
     return this.repo.update(id, userId, data);
   }
 
   delete(id, userId) {
     const existing = this.repo.findById(id, userId);
-    if (!existing) throw new NotFoundError('Vital', id);
+    if (!existing) throw new NotFoundError('Health condition', id);
     this.repo.delete(id, userId);
     return { ok: true };
   }
-
-  getTrends(userId, filters) {
-    return this.repo.getTrends(userId, filters);
-  }
 }
 
-module.exports = VitalService;
+module.exports = ConditionService;

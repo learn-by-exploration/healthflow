@@ -38,12 +38,34 @@ module.exports = function initPlugin(context) {
   // ─── Build router with all HealthFlow routes ───
   const router = Router();
 
+  // Auth stub — SPA calls /api/auth/me to verify session (interceptor rewrites to /api/hf/auth/me).
+  // Auth is handled by the monolith; we just return the monolith user info.
+  router.get('/api/auth/me', (req, res) => {
+    if (!req.userId) return res.status(401).json({ error: 'Not authenticated' });
+    const hfUser = db.prepare('SELECT id, email, display_name FROM users WHERE id = ?').get(req.userId);
+    if (!hfUser) return res.status(401).json({ error: 'User not found in HealthFlow' });
+    res.json({ id: hfUser.id, email: hfUser.email, display_name: hfUser.display_name });
+  });
+
+  // Also expose /api/auth/session for compatibility
+  router.get('/api/auth/session', (req, res) => {
+    if (!req.userId) return res.status(401).json({ error: 'Not authenticated' });
+    const hfUser = db.prepare('SELECT id, email, display_name FROM users WHERE id = ?').get(req.userId);
+    if (!hfUser) return res.status(401).json({ error: 'User not found in HealthFlow' });
+    res.json({ id: hfUser.id, email: hfUser.email, display_name: hfUser.display_name });
+  });
+
   // Mount all feature routes (absolute paths)
   router.use(require('./routes/vitals')(deps));
   router.use(require('./routes/medications')(deps));
   router.use(require('./routes/appointments')(deps));
   router.use(require('./routes/emergency-cards')(deps));
   router.use(require('./routes/family-members')(deps));
+  router.use(require('./routes/conditions')(deps));
+  router.use(require('./routes/allergies')(deps));
+  router.use(require('./routes/documents')(deps));
+  router.use(require('./routes/medical-expenses')(deps));
+  router.use(require('./routes/first-aid')(deps));
 
   return {
     name: 'healthflow',
@@ -53,9 +75,9 @@ module.exports = function initPlugin(context) {
     healthCheck() {
       try {
         const row = db.prepare('SELECT 1 AS ok').get();
-        return { ok: row.ok === 1 };
+        return { status: row.ok === 1 ? 'ok' : 'error' };
       } catch (err) {
-        return { ok: false, error: err.message };
+        return { status: 'error', message: err.message };
       }
     },
 

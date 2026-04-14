@@ -1,11 +1,11 @@
 const { NotFoundError } = require('../errors');
 
 /**
- * Vitals Service — business logic for vitals tracking.
+ * Medical Documents Service — business logic for medical document metadata tracking.
  */
-class VitalService {
-  constructor(vitalRepo) {
-    this.repo = vitalRepo;
+class DocumentService {
+  constructor(repo) {
+    this.repo = repo;
   }
 
   create(userId, data) {
@@ -13,9 +13,9 @@ class VitalService {
   }
 
   getById(id, userId) {
-    const vital = this.repo.findById(id, userId);
-    if (!vital) throw new NotFoundError('Vital', id);
-    return vital;
+    const doc = this.repo.findById(id, userId);
+    if (!doc) throw new NotFoundError('Medical document', id);
+    return doc;
   }
 
   list(userId, filters) {
@@ -24,20 +24,16 @@ class VitalService {
 
   update(id, userId, data) {
     const existing = this.repo.findById(id, userId);
-    if (!existing) throw new NotFoundError('Vital', id);
+    if (!existing) throw new NotFoundError('Medical document', id);
     return this.repo.update(id, userId, data);
   }
 
   delete(id, userId) {
     const existing = this.repo.findById(id, userId);
-    if (!existing) throw new NotFoundError('Vital', id);
+    if (!existing) throw new NotFoundError('Medical document', id);
     this.repo.delete(id, userId);
     return { ok: true };
   }
-
-  getTrends(userId, filters) {
-    return this.repo.getTrends(userId, filters);
-  }
 }
 
-module.exports = VitalService;
+module.exports = DocumentService;

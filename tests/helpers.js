@@ -43,6 +43,11 @@ function _ensureTestAuth() {
 
 function cleanDb() {
   const { db } = setup();
+  try { db.exec('DELETE FROM medical_expenses'); } catch {}
+  try { db.exec('DELETE FROM medical_documents'); } catch {}
+  try { db.exec('DELETE FROM health_conditions'); } catch {}
+  try { db.exec('DELETE FROM allergies'); } catch {}
+  try { db.exec('DELETE FROM first_aid_items'); } catch {}
   try { db.exec('DELETE FROM vitals'); } catch {}
   try { db.exec('DELETE FROM medications'); } catch {}
   try { db.exec('DELETE FROM appointments'); } catch {}
@@ -234,6 +239,169 @@ function makeEmergencyCard(overrides = {}) {
   return db.prepare('SELECT * FROM emergency_cards WHERE id=?').get(o.id);
 }
 
+function makeCondition(overrides = {}) {
+  const { db } = setup();
+  if (overrides.user_id && overrides.user_id !== _testUserId) {
+    const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(overrides.user_id);
+    if (!userExists) {
+      const bcrypt = require('bcryptjs');
+      const hash = bcrypt.hashSync('testpassword', 4);
+      db.prepare('INSERT OR IGNORE INTO users (id, email, password_hash, display_name) VALUES (?,?,?,?)').run(
+        overrides.user_id, `user${overrides.user_id}@test.com`, hash, `User ${overrides.user_id}`
+      );
+    }
+  }
+  const o = {
+    id: crypto.randomUUID(),
+    user_id: _testUserId,
+    family_member_id: null,
+    name: 'Test Condition',
+    severity: 'moderate',
+    diagnosed_date: '2024-01-15',
+    diagnosing_doctor: 'Dr. Test',
+    status: 'active',
+    notes: '',
+    ...overrides
+  };
+  db.prepare(`INSERT INTO health_conditions (id, user_id, family_member_id, name, severity, diagnosed_date, diagnosing_doctor, status, notes)
+    VALUES (?,?,?,?,?,?,?,?,?)`).run(
+    o.id, o.user_id, o.family_member_id, o.name, o.severity, o.diagnosed_date, o.diagnosing_doctor, o.status, o.notes
+  );
+  return db.prepare('SELECT * FROM health_conditions WHERE id=?').get(o.id);
+}
+
+function makeAllergy(overrides = {}) {
+  const { db } = setup();
+  if (overrides.user_id && overrides.user_id !== _testUserId) {
+    const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(overrides.user_id);
+    if (!userExists) {
+      const bcrypt = require('bcryptjs');
+      const hash = bcrypt.hashSync('testpassword', 4);
+      db.prepare('INSERT OR IGNORE INTO users (id, email, password_hash, display_name) VALUES (?,?,?,?)').run(
+        overrides.user_id, `user${overrides.user_id}@test.com`, hash, `User ${overrides.user_id}`
+      );
+    }
+  }
+  const o = {
+    id: crypto.randomUUID(),
+    user_id: _testUserId,
+    family_member_id: null,
+    allergen: 'Test Allergen',
+    category: 'other',
+    severity: 'moderate',
+    reaction: '',
+    diagnosed_date: null,
+    notes: '',
+    ...overrides
+  };
+  db.prepare(`INSERT INTO allergies (id, user_id, family_member_id, allergen, category, severity, reaction, diagnosed_date, notes)
+    VALUES (?,?,?,?,?,?,?,?,?)`).run(
+    o.id, o.user_id, o.family_member_id, o.allergen, o.category, o.severity, o.reaction, o.diagnosed_date, o.notes
+  );
+  return db.prepare('SELECT * FROM allergies WHERE id=?').get(o.id);
+}
+
+function makeMedicalExpense(overrides = {}) {
+  const { db } = setup();
+  if (overrides.user_id && overrides.user_id !== _testUserId) {
+    const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(overrides.user_id);
+    if (!userExists) {
+      const bcrypt = require('bcryptjs');
+      const hash = bcrypt.hashSync('testpassword', 4);
+      db.prepare('INSERT OR IGNORE INTO users (id, email, password_hash, display_name) VALUES (?,?,?,?)').run(
+        overrides.user_id, `user${overrides.user_id}@test.com`, hash, `User ${overrides.user_id}`
+      );
+    }
+  }
+  const o = {
+    id: crypto.randomUUID(),
+    user_id: _testUserId,
+    family_member_id: null,
+    appointment_id: null,
+    category: 'consultation',
+    description: 'Test expense',
+    amount: 100000,
+    currency: 'INR',
+    expense_date: '2026-04-10',
+    payment_method: '',
+    insurance_claimed: 0,
+    receipt_document_id: null,
+    notes: '',
+    ...overrides
+  };
+  db.prepare(`INSERT INTO medical_expenses (id, user_id, family_member_id, appointment_id, category, description, amount, currency, expense_date, payment_method, insurance_claimed, receipt_document_id, notes)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+    o.id, o.user_id, o.family_member_id, o.appointment_id, o.category, o.description, o.amount, o.currency, o.expense_date, o.payment_method, o.insurance_claimed, o.receipt_document_id, o.notes
+  );
+  return db.prepare('SELECT * FROM medical_expenses WHERE id=?').get(o.id);
+}
+
+function makeFirstAidItem(overrides = {}) {
+  const { db } = setup();
+  if (overrides.user_id && overrides.user_id !== _testUserId) {
+    const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(overrides.user_id);
+    if (!userExists) {
+      const bcrypt = require('bcryptjs');
+      const hash = bcrypt.hashSync('testpassword', 4);
+      db.prepare('INSERT OR IGNORE INTO users (id, email, password_hash, display_name) VALUES (?,?,?,?)').run(
+        overrides.user_id, `user${overrides.user_id}@test.com`, hash, `User ${overrides.user_id}`
+      );
+    }
+  }
+  const o = {
+    id: crypto.randomUUID(),
+    user_id: _testUserId,
+    name: 'Test First Aid Item',
+    category: 'general',
+    quantity: 1,
+    expiry_date: null,
+    is_available: 1,
+    notes: '',
+    ...overrides
+  };
+  db.prepare(`INSERT INTO first_aid_items (id, user_id, name, category, quantity, expiry_date, is_available, notes)
+    VALUES (?,?,?,?,?,?,?,?)`).run(
+    o.id, o.user_id, o.name, o.category, o.quantity, o.expiry_date, o.is_available, o.notes
+  );
+  return db.prepare('SELECT * FROM first_aid_items WHERE id=?').get(o.id);
+}
+
+function makeDocument(overrides = {}) {
+  const { db } = setup();
+  if (overrides.user_id && overrides.user_id !== _testUserId) {
+    const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(overrides.user_id);
+    if (!userExists) {
+      const bcrypt = require('bcryptjs');
+      const hash = bcrypt.hashSync('testpassword', 4);
+      db.prepare('INSERT OR IGNORE INTO users (id, email, password_hash, display_name) VALUES (?,?,?,?)').run(
+        overrides.user_id, `user${overrides.user_id}@test.com`, hash, `User ${overrides.user_id}`
+      );
+    }
+  }
+  const o = {
+    id: crypto.randomUUID(),
+    user_id: _testUserId,
+    family_member_id: null,
+    appointment_id: null,
+    type: 'prescription',
+    title: 'Test Document',
+    file_name: 'test.pdf',
+    file_path: '/uploads/test.pdf',
+    file_size: 1024,
+    mime_type: 'application/pdf',
+    notes: '',
+    document_date: null,
+    doctor_name: '',
+    hospital: '',
+    ...overrides
+  };
+  db.prepare(`INSERT INTO medical_documents (id, user_id, family_member_id, appointment_id, type, title, file_name, file_path, file_size, mime_type, notes, document_date, doctor_name, hospital)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+    o.id, o.user_id, o.family_member_id, o.appointment_id, o.type, o.title, o.file_name, o.file_path, o.file_size, o.mime_type, o.notes, o.document_date, o.doctor_name, o.hospital
+  );
+  return db.prepare('SELECT * FROM medical_documents WHERE id=?').get(o.id);
+}
+
 module.exports = {
   setup,
   cleanDb,
@@ -246,4 +414,9 @@ module.exports = {
   makeMedication,
   makeAppointment,
   makeEmergencyCard,
+  makeCondition,
+  makeAllergy,
+  makeMedicalExpense,
+  makeFirstAidItem,
+  makeDocument,
 };

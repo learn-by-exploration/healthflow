@@ -104,6 +104,11 @@
     .badge-completed { background: var(--success-bg); color: var(--success); }
     .badge-cancelled { background: var(--border-light); color: var(--text-muted); }
     .badge-rescheduled { background: var(--warning-bg); color: var(--warning); }
+    .badge-danger { background: var(--danger-bg); color: var(--danger); }
+    .badge-info { background: var(--info-bg); color: var(--info); }
+    .badge-reimbursable { background: var(--success-bg); color: var(--success); }
+    .badge-expired { background: var(--danger-bg); color: var(--danger); }
+    .badge-expiring { background: var(--warning-bg); color: var(--warning); }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
     .form-group input, .form-group select, .form-group textarea {
@@ -218,6 +223,21 @@
     <button class="nav-tab" data-view="family">
       <span class="material-icons-round mi">people</span> Family
     </button>
+    <button class="nav-tab" data-view="conditions">
+      <span class="material-icons-round mi">medical_information</span> Conditions
+    </button>
+    <button class="nav-tab" data-view="allergies">
+      <span class="material-icons-round mi">warning_amber</span> Allergies
+    </button>
+    <button class="nav-tab" data-view="expenses">
+      <span class="material-icons-round mi">receipt_long</span> Expenses
+    </button>
+    <button class="nav-tab" data-view="first-aid">
+      <span class="material-icons-round mi">medical_services</span> First Aid
+    </button>
+    <button class="nav-tab" data-view="documents">
+      <span class="material-icons-round mi">description</span> Documents
+    </button>
   </nav>
   <div class="content">
     <div id="view-dashboard" class="view active"></div>
@@ -226,6 +246,11 @@
     <div id="view-appointments" class="view"></div>
     <div id="view-emergency" class="view"></div>
     <div id="view-family" class="view"></div>
+    <div id="view-conditions" class="view"></div>
+    <div id="view-allergies" class="view"></div>
+    <div id="view-expenses" class="view"></div>
+    <div id="view-first-aid" class="view"></div>
+    <div id="view-documents" class="view"></div>
   </div>
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal" id="modal-content"></div>
@@ -292,6 +317,15 @@
     var familyMembers = [];
     var currentView = 'dashboard';
     var vitalFilter = '';
+    var conditions = [];
+    var conditionFilter = '';
+    var allergies = [];
+    var allergyFilter = '';
+    var medExpenses = [];
+    var expenseFilter = '';
+    var firstAidItems = [];
+    var medDocuments = [];
+    var documentFilter = '';
 
     // ═══════════════════════════════════════════
     // Navigation
@@ -417,6 +451,11 @@
         case 'appointments': renderAppointments(); break;
         case 'emergency': renderEmergency(); break;
         case 'family': renderFamily(); break;
+        case 'conditions': renderConditions(); break;
+        case 'allergies': renderAllergies(); break;
+        case 'expenses': renderExpenses(); break;
+        case 'first-aid': renderFirstAid(); break;
+        case 'documents': renderDocuments(); break;
       }
     }
 
@@ -959,6 +998,418 @@
     async function deleteFm(id) {
       if (!confirm('Delete this family member? Related health data will be unlinked.')) return;
       try { await api('/api/family-members/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Member deleted', 'success'); await loadAll(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // Label Maps & Helpers for New Views
+    // ═══════════════════════════════════════════
+    var expenseCategoryLabels = {
+      consultation: 'Consultation', medication: 'Medication', lab_test: 'Lab Test',
+      surgery: 'Surgery', dental: 'Dental', vision: 'Vision', therapy: 'Therapy',
+      emergency: 'Emergency', insurance_premium: 'Insurance Premium', other: 'Other'
+    };
+    var documentTypeLabels = {
+      prescription: 'Prescription', lab_report: 'Lab Report', discharge_summary: 'Discharge Summary',
+      insurance_card: 'Insurance Card', vaccination_record: 'Vaccination', medical_certificate: 'Medical Certificate',
+      referral: 'Referral', imaging: 'Imaging/Scan', other: 'Other'
+    };
+    function sevBadge(s) {
+      switch(s) { case 'mild': return 'badge-active'; case 'moderate': return 'badge-paused'; case 'severe': return 'badge-danger'; case 'life-threatening': return 'badge-danger'; default: return 'badge-scheduled'; }
+    }
+    function fmtCurrency(a) {
+      if (a == null) return '\u2014';
+      return '\u20B9' + Number(a).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function expiryStatus(d) {
+      if (!d) return '';
+      var diff = (new Date(d) - new Date()) / 86400000;
+      if (diff < 0) return 'expired';
+      if (diff < 30) return 'expiring';
+      return '';
+    }
+
+    // ═══════════════════════════════════════════
+    // Conditions View
+    // ═══════════════════════════════════════════
+    async function renderConditions() {
+      var el = document.getElementById('view-conditions');
+      try { var res = await api('/api/conditions' + (conditionFilter ? '?status=' + encodeURIComponent(conditionFilter) : '')); conditions = res.data || []; }
+      catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
+
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">medical_information</span> Conditions</h3>';
+      h += '<button class="btn btn-primary" id="add-cond-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Condition</button></div>';
+      h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Status:</label>';
+      h += '<select id="cond-filter"><option value="">All</option>';
+      ['active','resolved','managed'].forEach(function(s) { h += '<option value="' + esc(s) + '"' + (conditionFilter === s ? ' selected' : '') + '>' + esc(s.charAt(0).toUpperCase() + s.slice(1)) + '</option>'; });
+      h += '</select></div>';
+
+      if (conditions.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">medical_information</span><h3>No conditions recorded</h3><p>Track medical conditions for you and your family.</p></div>';
+      } else {
+        h += '<div class="card" style="padding:0;overflow-x:auto"><table class="data-table"><thead><tr><th>Name</th><th>Severity</th><th>Status</th><th>Diagnosed</th><th>Doctor</th><th>For</th><th>Actions</th></tr></thead><tbody>';
+        conditions.forEach(function(c) {
+          h += '<tr><td><strong>' + esc(c.name) + '</strong></td>';
+          h += '<td><span class="badge ' + sevBadge(c.severity) + '">' + esc(c.severity || '') + '</span></td>';
+          h += '<td><span class="badge badge-' + (c.status === 'active' ? 'active' : c.status === 'managed' ? 'scheduled' : 'stopped') + '">' + esc(c.status || '') + '</span></td>';
+          h += '<td>' + esc(fmtDate(c.diagnosed_date)) + '</td><td>' + esc(c.diagnosed_by || '') + '</td>';
+          h += '<td>' + esc(getMemberName(c.family_member_id)) + '</td>';
+          h += '<td class="actions"><button class="btn-icon edit-cond" data-id="' + escA(c.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-cond" data-id="' + escA(c.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+        });
+        h += '</tbody></table></div>';
+      }
+      el.innerHTML = h;
+      document.getElementById('add-cond-btn').addEventListener('click', function() { openCondForm(); });
+      document.getElementById('cond-filter').addEventListener('change', function() { conditionFilter = this.value; renderConditions(); });
+      document.querySelectorAll('.edit-cond').forEach(function(btn) {
+        btn.addEventListener('click', function() { var c = conditions.find(function(x) { return x.id === btn.dataset.id; }); if (c) openCondForm(c); });
+      });
+      document.querySelectorAll('.del-cond').forEach(function(btn) { btn.addEventListener('click', function() { deleteCond(btn.dataset.id); }); });
+    }
+
+    function openCondForm(existing) {
+      var isEdit = !!existing;
+      var h = '<h3>' + (isEdit ? 'Edit Condition' : 'Add Condition') + '</h3>';
+      h += '<div class="form-group"><label>Condition Name *</label><input type="text" id="cf-name" maxlength="200" value="' + escA(existing ? existing.name : '') + '" required></div>';
+      h += '<div class="form-row"><div class="form-group"><label>Severity</label><select id="cf-severity">';
+      ['mild','moderate','severe'].forEach(function(s) { h += '<option value="' + esc(s) + '"' + (existing && existing.severity === s ? ' selected' : '') + '>' + esc(s.charAt(0).toUpperCase() + s.slice(1)) + '</option>'; });
+      h += '</select></div><div class="form-group"><label>Status</label><select id="cf-status">';
+      ['active','resolved','managed'].forEach(function(s) { h += '<option value="' + esc(s) + '"' + (existing && existing.status === s ? ' selected' : '') + '>' + esc(s.charAt(0).toUpperCase() + s.slice(1)) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-row"><div class="form-group"><label>Diagnosed Date</label><input type="date" id="cf-date" value="' + escA(existing && existing.diagnosed_date ? existing.diagnosed_date : '') + '"></div>';
+      h += '<div class="form-group"><label>Diagnosed By</label><input type="text" id="cf-doctor" maxlength="200" value="' + escA(existing ? existing.diagnosed_by : '') + '"></div></div>';
+      h += '<div class="form-group"><label>Family Member</label><select id="cf-member"><option value="">Self</option>';
+      familyMembers.forEach(function(m) { h += '<option value="' + escA(m.id) + '"' + (existing && existing.family_member_id === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; });
+      h += '</select></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="cf-notes" maxlength="1000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="cf-cancel">Cancel</button><button class="btn btn-primary" id="cf-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('cf-cancel').addEventListener('click', closeModal);
+      document.getElementById('cf-save').addEventListener('click', async function() {
+        var name = document.getElementById('cf-name').value.trim();
+        if (!name) { showToast('Condition name is required', 'error'); return; }
+        var body = { name: name, severity: document.getElementById('cf-severity').value, status: document.getElementById('cf-status').value, diagnosed_by: document.getElementById('cf-doctor').value, notes: document.getElementById('cf-notes').value };
+        var dt = document.getElementById('cf-date').value; if (dt) body.diagnosed_date = dt;
+        var mem = document.getElementById('cf-member').value; if (mem) body.family_member_id = mem;
+        try {
+          if (isEdit) { await api('/api/conditions/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Condition updated', 'success'); }
+          else { await api('/api/conditions', { method: 'POST', body: JSON.stringify(body) }); showToast('Condition added', 'success'); }
+          closeModal(); renderConditions();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function deleteCond(id) {
+      if (!confirm('Delete this condition?')) return;
+      try { await api('/api/conditions/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Condition deleted', 'success'); renderConditions(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // Allergies View
+    // ═══════════════════════════════════════════
+    async function renderAllergies() {
+      var el = document.getElementById('view-allergies');
+      try { var res = await api('/api/allergies'); allergies = res.data || []; }
+      catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
+
+      var items = allergyFilter ? allergies.filter(function(a) { return a.severity === allergyFilter; }) : allergies;
+
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--warning)">warning_amber</span> Allergies</h3>';
+      h += '<button class="btn btn-primary" id="add-allg-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Allergy</button></div>';
+      h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Severity:</label>';
+      h += '<select id="allg-filter"><option value="">All</option>';
+      ['mild','moderate','severe','life-threatening'].forEach(function(s) { h += '<option value="' + esc(s) + '"' + (allergyFilter === s ? ' selected' : '') + '>' + esc(s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, ' ')) + '</option>'; });
+      h += '</select></div>';
+
+      if (items.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">warning_amber</span><h3>No allergies recorded</h3><p>Track allergies for you and your family.</p></div>';
+      } else {
+        h += '<div class="card" style="padding:0;overflow-x:auto"><table class="data-table"><thead><tr><th>Allergen</th><th>Reaction</th><th>Severity</th><th>For</th><th>Notes</th><th>Actions</th></tr></thead><tbody>';
+        items.forEach(function(a) {
+          h += '<tr><td><strong>' + esc(a.allergen) + '</strong></td>';
+          h += '<td>' + esc(a.reaction || '') + '</td>';
+          h += '<td><span class="badge ' + sevBadge(a.severity) + '">' + esc(a.severity || '') + '</span></td>';
+          h += '<td>' + esc(getMemberName(a.family_member_id)) + '</td>';
+          h += '<td>' + esc(a.notes || '') + '</td>';
+          h += '<td class="actions"><button class="btn-icon edit-allg" data-id="' + escA(a.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-allg" data-id="' + escA(a.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+        });
+        h += '</tbody></table></div>';
+      }
+      el.innerHTML = h;
+      document.getElementById('add-allg-btn').addEventListener('click', function() { openAllergyForm(); });
+      document.getElementById('allg-filter').addEventListener('change', function() { allergyFilter = this.value; renderAllergies(); });
+      document.querySelectorAll('.edit-allg').forEach(function(btn) {
+        btn.addEventListener('click', function() { var a = allergies.find(function(x) { return x.id === btn.dataset.id; }); if (a) openAllergyForm(a); });
+      });
+      document.querySelectorAll('.del-allg').forEach(function(btn) { btn.addEventListener('click', function() { deleteAllergy(btn.dataset.id); }); });
+    }
+
+    function openAllergyForm(existing) {
+      var isEdit = !!existing;
+      var h = '<h3>' + (isEdit ? 'Edit Allergy' : 'Add Allergy') + '</h3>';
+      h += '<div class="form-group"><label>Allergen *</label><input type="text" id="ag-name" maxlength="200" value="' + escA(existing ? existing.allergen : '') + '" required></div>';
+      h += '<div class="form-group"><label>Reaction</label><input type="text" id="ag-reaction" maxlength="500" value="' + escA(existing ? existing.reaction : '') + '" placeholder="e.g. Hives, swelling"></div>';
+      h += '<div class="form-row"><div class="form-group"><label>Severity</label><select id="ag-severity">';
+      ['mild','moderate','severe','life-threatening'].forEach(function(s) { h += '<option value="' + esc(s) + '"' + (existing && existing.severity === s ? ' selected' : '') + '>' + esc(s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, ' ')) + '</option>'; });
+      h += '</select></div>';
+      h += '<div class="form-group"><label>Family Member</label><select id="ag-member"><option value="">Self</option>';
+      familyMembers.forEach(function(m) { h += '<option value="' + escA(m.id) + '"' + (existing && existing.family_member_id === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="ag-notes" maxlength="1000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="ag-cancel">Cancel</button><button class="btn btn-primary" id="ag-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('ag-cancel').addEventListener('click', closeModal);
+      document.getElementById('ag-save').addEventListener('click', async function() {
+        var allergen = document.getElementById('ag-name').value.trim();
+        if (!allergen) { showToast('Allergen is required', 'error'); return; }
+        var body = { allergen: allergen, reaction: document.getElementById('ag-reaction').value, severity: document.getElementById('ag-severity').value, notes: document.getElementById('ag-notes').value };
+        var mem = document.getElementById('ag-member').value; if (mem) body.family_member_id = mem;
+        try {
+          if (isEdit) { await api('/api/allergies/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Allergy updated', 'success'); }
+          else { await api('/api/allergies', { method: 'POST', body: JSON.stringify(body) }); showToast('Allergy added', 'success'); }
+          closeModal(); renderAllergies();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function deleteAllergy(id) {
+      if (!confirm('Delete this allergy record?')) return;
+      try { await api('/api/allergies/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Allergy deleted', 'success'); renderAllergies(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // Medical Expenses View
+    // ═══════════════════════════════════════════
+    async function renderExpenses() {
+      var el = document.getElementById('view-expenses');
+      try { var res = await api('/api/medical-expenses' + (expenseFilter ? '?category=' + encodeURIComponent(expenseFilter) : '')); medExpenses = res.data || []; }
+      catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
+
+      var total = medExpenses.reduce(function(s, e) { return s + (Number(e.amount) || 0); }, 0);
+      var reimbursable = medExpenses.filter(function(e) { return e.is_reimbursable; }).reduce(function(s, e) { return s + (Number(e.amount) || 0); }, 0);
+
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">receipt_long</span> Medical Expenses</h3>';
+      h += '<button class="btn btn-primary" id="add-exp-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Expense</button></div>';
+      h += '<div class="stats-grid">';
+      h += '<div class="stat-card"><div class="stat-value">' + esc(fmtCurrency(total)) + '</div><div class="stat-label">Total Expenses</div></div>';
+      h += '<div class="stat-card"><div class="stat-value">' + esc(fmtCurrency(reimbursable)) + '</div><div class="stat-label">Reimbursable</div></div>';
+      h += '</div>';
+      h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Category:</label>';
+      h += '<select id="exp-filter"><option value="">All</option>';
+      Object.keys(expenseCategoryLabels).forEach(function(k) { h += '<option value="' + esc(k) + '"' + (expenseFilter === k ? ' selected' : '') + '>' + esc(expenseCategoryLabels[k]) + '</option>'; });
+      h += '</select></div>';
+
+      if (medExpenses.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">receipt_long</span><h3>No expenses recorded</h3><p>Track medical expenses and reimbursements.</p></div>';
+      } else {
+        h += '<div class="card" style="padding:0;overflow-x:auto"><table class="data-table"><thead><tr><th>Description</th><th>Amount</th><th>Category</th><th>Date</th><th>Reimbursable</th><th>For</th><th>Actions</th></tr></thead><tbody>';
+        medExpenses.forEach(function(e) {
+          h += '<tr><td><strong>' + esc(e.description) + '</strong></td>';
+          h += '<td>' + esc(fmtCurrency(e.amount)) + '</td>';
+          h += '<td><span class="badge badge-scheduled">' + esc(expenseCategoryLabels[e.category] || e.category || '') + '</span></td>';
+          h += '<td>' + esc(fmtDate(e.date)) + '</td>';
+          h += '<td>' + (e.is_reimbursable ? '<span class="badge badge-reimbursable">Yes</span>' : 'No') + '</td>';
+          h += '<td>' + esc(getMemberName(e.family_member_id)) + '</td>';
+          h += '<td class="actions"><button class="btn-icon edit-exp" data-id="' + escA(e.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-exp" data-id="' + escA(e.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+        });
+        h += '</tbody></table></div>';
+      }
+      el.innerHTML = h;
+      document.getElementById('add-exp-btn').addEventListener('click', function() { openExpenseForm(); });
+      document.getElementById('exp-filter').addEventListener('change', function() { expenseFilter = this.value; renderExpenses(); });
+      document.querySelectorAll('.edit-exp').forEach(function(btn) {
+        btn.addEventListener('click', function() { var e = medExpenses.find(function(x) { return x.id === btn.dataset.id; }); if (e) openExpenseForm(e); });
+      });
+      document.querySelectorAll('.del-exp').forEach(function(btn) { btn.addEventListener('click', function() { deleteExpense(btn.dataset.id); }); });
+    }
+
+    function openExpenseForm(existing) {
+      var isEdit = !!existing;
+      var h = '<h3>' + (isEdit ? 'Edit Expense' : 'Add Expense') + '</h3>';
+      h += '<div class="form-group"><label>Description *</label><input type="text" id="xf-desc" maxlength="300" value="' + escA(existing ? existing.description : '') + '" required></div>';
+      h += '<div class="form-row"><div class="form-group"><label>Amount (\u20B9) *</label><input type="number" id="xf-amount" step="0.01" min="0" value="' + escA(existing ? existing.amount : '') + '" required></div>';
+      h += '<div class="form-group"><label>Category</label><select id="xf-category">';
+      Object.keys(expenseCategoryLabels).forEach(function(k) { h += '<option value="' + esc(k) + '"' + (existing && existing.category === k ? ' selected' : '') + '>' + esc(expenseCategoryLabels[k]) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-row"><div class="form-group"><label>Date</label><input type="date" id="xf-date" value="' + escA(existing && existing.date ? existing.date : today()) + '"></div>';
+      h += '<div class="form-group"><label>Family Member</label><select id="xf-member"><option value="">Self</option>';
+      familyMembers.forEach(function(m) { h += '<option value="' + escA(m.id) + '"' + (existing && existing.family_member_id === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-group"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="xf-reimb"' + (existing && existing.is_reimbursable ? ' checked' : '') + '> Reimbursable</label></div>';
+      h += '<div class="form-group"><label>Receipt Reference</label><input type="text" id="xf-receipt" maxlength="300" value="' + escA(existing ? existing.receipt_reference : '') + '" placeholder="e.g. Bill #12345"></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="xf-notes" maxlength="1000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="xf-cancel">Cancel</button><button class="btn btn-primary" id="xf-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('xf-cancel').addEventListener('click', closeModal);
+      document.getElementById('xf-save').addEventListener('click', async function() {
+        var desc = document.getElementById('xf-desc').value.trim();
+        var amount = parseFloat(document.getElementById('xf-amount').value);
+        if (!desc) { showToast('Description is required', 'error'); return; }
+        if (isNaN(amount) || amount < 0) { showToast('Valid amount is required', 'error'); return; }
+        var body = { description: desc, amount: amount, category: document.getElementById('xf-category').value, date: document.getElementById('xf-date').value, is_reimbursable: document.getElementById('xf-reimb').checked, receipt_reference: document.getElementById('xf-receipt').value, notes: document.getElementById('xf-notes').value };
+        var mem = document.getElementById('xf-member').value; if (mem) body.family_member_id = mem;
+        try {
+          if (isEdit) { await api('/api/medical-expenses/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Expense updated', 'success'); }
+          else { await api('/api/medical-expenses', { method: 'POST', body: JSON.stringify(body) }); showToast('Expense added', 'success'); }
+          closeModal(); renderExpenses();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function deleteExpense(id) {
+      if (!confirm('Delete this expense?')) return;
+      try { await api('/api/medical-expenses/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Expense deleted', 'success'); renderExpenses(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // First Aid View
+    // ═══════════════════════════════════════════
+    async function renderFirstAid() {
+      var el = document.getElementById('view-first-aid');
+      try { var res = await api('/api/first-aid'); firstAidItems = res.data || []; }
+      catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
+
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--success)">medical_services</span> First Aid Kit</h3>';
+      h += '<button class="btn btn-primary" id="add-fa-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Item</button></div>';
+
+      if (firstAidItems.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">medical_services</span><h3>No first aid items</h3><p>Track your first aid kit supplies and expiry dates.</p></div>';
+      } else {
+        h += '<div class="card" style="padding:0;overflow-x:auto"><table class="data-table"><thead><tr><th>Item</th><th>Qty</th><th>Location</th><th>Expiry</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead><tbody>';
+        firstAidItems.forEach(function(item) {
+          var es = expiryStatus(item.expiry_date);
+          var rowStyle = es === 'expired' ? ' style="background:var(--danger-bg)"' : es === 'expiring' ? ' style="background:var(--warning-bg)"' : '';
+          h += '<tr' + rowStyle + '><td><strong>' + esc(item.item_name) + '</strong></td>';
+          h += '<td>' + esc(item.quantity != null ? String(item.quantity) : '') + '</td>';
+          h += '<td>' + esc(item.location || '') + '</td>';
+          h += '<td>' + esc(fmtDate(item.expiry_date)) + '</td>';
+          h += '<td>' + (es === 'expired' ? '<span class="badge badge-expired">Expired</span>' : es === 'expiring' ? '<span class="badge badge-expiring">Expiring Soon</span>' : '<span class="badge badge-active">OK</span>') + '</td>';
+          h += '<td>' + esc(item.notes || '') + '</td>';
+          h += '<td class="actions"><button class="btn-icon edit-fa" data-id="' + escA(item.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-fa" data-id="' + escA(item.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+        });
+        h += '</tbody></table></div>';
+      }
+      el.innerHTML = h;
+      document.getElementById('add-fa-btn').addEventListener('click', function() { openFirstAidForm(); });
+      document.querySelectorAll('.edit-fa').forEach(function(btn) {
+        btn.addEventListener('click', function() { var item = firstAidItems.find(function(x) { return x.id === btn.dataset.id; }); if (item) openFirstAidForm(item); });
+      });
+      document.querySelectorAll('.del-fa').forEach(function(btn) { btn.addEventListener('click', function() { deleteFirstAidItem(btn.dataset.id); }); });
+    }
+
+    function openFirstAidForm(existing) {
+      var isEdit = !!existing;
+      var h = '<h3>' + (isEdit ? 'Edit First Aid Item' : 'Add First Aid Item') + '</h3>';
+      h += '<div class="form-group"><label>Item Name *</label><input type="text" id="fa-name" maxlength="200" value="' + escA(existing ? existing.item_name : '') + '" required></div>';
+      h += '<div class="form-row"><div class="form-group"><label>Quantity</label><input type="number" id="fa-qty" min="0" value="' + escA(existing ? existing.quantity : '') + '"></div>';
+      h += '<div class="form-group"><label>Expiry Date</label><input type="date" id="fa-expiry" value="' + escA(existing && existing.expiry_date ? existing.expiry_date : '') + '"></div></div>';
+      h += '<div class="form-group"><label>Location</label><input type="text" id="fa-location" maxlength="200" value="' + escA(existing ? existing.location : '') + '" placeholder="e.g. Kitchen cabinet, Car"></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="fa-notes" maxlength="1000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="fa-cancel">Cancel</button><button class="btn btn-primary" id="fa-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('fa-cancel').addEventListener('click', closeModal);
+      document.getElementById('fa-save').addEventListener('click', async function() {
+        var name = document.getElementById('fa-name').value.trim();
+        if (!name) { showToast('Item name is required', 'error'); return; }
+        var body = { item_name: name, location: document.getElementById('fa-location').value, notes: document.getElementById('fa-notes').value };
+        var qty = document.getElementById('fa-qty').value; if (qty !== '') body.quantity = parseInt(qty, 10);
+        var exp = document.getElementById('fa-expiry').value; if (exp) body.expiry_date = exp;
+        try {
+          if (isEdit) { await api('/api/first-aid/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Item updated', 'success'); }
+          else { await api('/api/first-aid', { method: 'POST', body: JSON.stringify(body) }); showToast('Item added', 'success'); }
+          closeModal(); renderFirstAid();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function deleteFirstAidItem(id) {
+      if (!confirm('Delete this first aid item?')) return;
+      try { await api('/api/first-aid/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Item deleted', 'success'); renderFirstAid(); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════
+    // Documents View
+    // ═══════════════════════════════════════════
+    async function renderDocuments() {
+      var el = document.getElementById('view-documents');
+      try { var res = await api('/api/documents' + (documentFilter ? '?document_type=' + encodeURIComponent(documentFilter) : '')); medDocuments = res.data || []; }
+      catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
+
+      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--info)">description</span> Medical Documents</h3>';
+      h += '<button class="btn btn-primary" id="add-doc-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Document</button></div>';
+      h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Type:</label>';
+      h += '<select id="doc-filter"><option value="">All</option>';
+      Object.keys(documentTypeLabels).forEach(function(k) { h += '<option value="' + esc(k) + '"' + (documentFilter === k ? ' selected' : '') + '>' + esc(documentTypeLabels[k]) + '</option>'; });
+      h += '</select></div>';
+
+      if (medDocuments.length === 0) {
+        h += '<div class="empty-state"><span class="material-icons-round">description</span><h3>No documents</h3><p>Store references to medical documents, prescriptions, and reports.</p></div>';
+      } else {
+        h += '<div class="card" style="padding:0;overflow-x:auto"><table class="data-table"><thead><tr><th>Title</th><th>Type</th><th>Issued</th><th>Expiry</th><th>For</th><th>Reference</th><th>Actions</th></tr></thead><tbody>';
+        medDocuments.forEach(function(d) {
+          h += '<tr><td><strong>' + esc(d.title) + '</strong></td>';
+          h += '<td><span class="badge badge-info">' + esc(documentTypeLabels[d.document_type] || d.document_type || '') + '</span></td>';
+          h += '<td>' + esc(fmtDate(d.issued_date)) + '</td>';
+          h += '<td>' + esc(fmtDate(d.expiry_date)) + '</td>';
+          h += '<td>' + esc(getMemberName(d.family_member_id)) + '</td>';
+          h += '<td>' + esc(d.file_reference || '') + '</td>';
+          h += '<td class="actions"><button class="btn-icon edit-doc" data-id="' + escA(d.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-doc" data-id="' + escA(d.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+        });
+        h += '</tbody></table></div>';
+      }
+      el.innerHTML = h;
+      document.getElementById('add-doc-btn').addEventListener('click', function() { openDocForm(); });
+      document.getElementById('doc-filter').addEventListener('change', function() { documentFilter = this.value; renderDocuments(); });
+      document.querySelectorAll('.edit-doc').forEach(function(btn) {
+        btn.addEventListener('click', function() { var d = medDocuments.find(function(x) { return x.id === btn.dataset.id; }); if (d) openDocForm(d); });
+      });
+      document.querySelectorAll('.del-doc').forEach(function(btn) { btn.addEventListener('click', function() { deleteDoc(btn.dataset.id); }); });
+    }
+
+    function openDocForm(existing) {
+      var isEdit = !!existing;
+      var h = '<h3>' + (isEdit ? 'Edit Document' : 'Add Document') + '</h3>';
+      h += '<div class="form-group"><label>Title *</label><input type="text" id="df-title" maxlength="300" value="' + escA(existing ? existing.title : '') + '" required></div>';
+      h += '<div class="form-row"><div class="form-group"><label>Document Type</label><select id="df-type">';
+      Object.keys(documentTypeLabels).forEach(function(k) { h += '<option value="' + esc(k) + '"' + (existing && existing.document_type === k ? ' selected' : '') + '>' + esc(documentTypeLabels[k]) + '</option>'; });
+      h += '</select></div>';
+      h += '<div class="form-group"><label>Family Member</label><select id="df-member"><option value="">Self</option>';
+      familyMembers.forEach(function(m) { h += '<option value="' + escA(m.id) + '"' + (existing && existing.family_member_id === m.id ? ' selected' : '') + '>' + esc(m.name) + '</option>'; });
+      h += '</select></div></div>';
+      h += '<div class="form-group"><label>File Reference</label><input type="text" id="df-ref" maxlength="500" value="' + escA(existing ? existing.file_reference : '') + '" placeholder="e.g. filename, URL, or location"></div>';
+      h += '<div class="form-row"><div class="form-group"><label>Issued Date</label><input type="date" id="df-issued" value="' + escA(existing && existing.issued_date ? existing.issued_date : '') + '"></div>';
+      h += '<div class="form-group"><label>Expiry Date</label><input type="date" id="df-expiry" value="' + escA(existing && existing.expiry_date ? existing.expiry_date : '') + '"></div></div>';
+      h += '<div class="form-group"><label>Notes</label><textarea id="df-notes" maxlength="1000">' + esc(existing ? existing.notes : '') + '</textarea></div>';
+      h += '<div class="form-actions"><button class="btn btn-secondary" id="df-cancel">Cancel</button><button class="btn btn-primary" id="df-save">' + (isEdit ? 'Update' : 'Save') + '</button></div>';
+      openModal(h);
+      document.getElementById('df-cancel').addEventListener('click', closeModal);
+      document.getElementById('df-save').addEventListener('click', async function() {
+        var title = document.getElementById('df-title').value.trim();
+        if (!title) { showToast('Title is required', 'error'); return; }
+        var body = { title: title, document_type: document.getElementById('df-type').value, file_reference: document.getElementById('df-ref').value, notes: document.getElementById('df-notes').value };
+        var issued = document.getElementById('df-issued').value; if (issued) body.issued_date = issued;
+        var expiry = document.getElementById('df-expiry').value; if (expiry) body.expiry_date = expiry;
+        var mem = document.getElementById('df-member').value; if (mem) body.family_member_id = mem;
+        try {
+          if (isEdit) { await api('/api/documents/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Document updated', 'success'); }
+          else { await api('/api/documents', { method: 'POST', body: JSON.stringify(body) }); showToast('Document added', 'success'); }
+          closeModal(); renderDocuments();
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      });
+    }
+
+    async function deleteDoc(id) {
+      if (!confirm('Delete this document?')) return;
+      try { await api('/api/documents/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Document deleted', 'success'); renderDocuments(); }
       catch(e) { showToast('Failed: ' + e.message, 'error'); }
     }
 

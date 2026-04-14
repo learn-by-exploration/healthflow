@@ -14,6 +14,12 @@ module.exports = function familyMembersRoutes({ db }) {
     res.json({ data: members });
   });
 
+  // ─── Get family member summary (aggregated) ───
+  router.get('/api/family-members/:id/summary', (req, res) => {
+    const summary = service.getSummary(req.params.id, req.userId);
+    res.json(summary);
+  });
+
   // ─── Get single family member ───
   router.get('/api/family-members/:id', (req, res) => {
     const member = service.getById(req.params.id, req.userId);

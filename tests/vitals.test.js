@@ -152,4 +152,59 @@ describe('Vitals', () => {
       await agent().delete('/api/vitals/00000000-0000-0000-0000-000000000000').expect(404);
     });
   });
+
+  describe('GET /api/vitals/trends', () => {
+    it('should return aggregated trends by type', async () => {
+      makeVital({ type: 'blood_pressure', value: 120, value_secondary: 80 });
+      makeVital({ type: 'blood_pressure', value: 130, value_secondary: 85 });
+      makeVital({ type: 'weight', value: 72, value_secondary: null });
+
+      const res = await agent()
+        .get('/api/vitals/trends')
+        .expect(200);
+
+      assert.ok(Array.isArray(res.body.data));
+      const bp = res.body.data.find(d => d.type === 'blood_pressure');
+      assert.ok(bp);
+      assert.strictEqual(bp.count, 2);
+      assert.strictEqual(bp.avg_value, 125);
+      assert.strictEqual(bp.min_value, 120);
+      assert.strictEqual(bp.max_value, 130);
+    });
+
+    it('should filter trends by type', async () => {
+      makeVital({ type: 'blood_pressure', value: 120 });
+      makeVital({ type: 'weight', value: 72, value_secondary: null });
+
+      const res = await agent()
+        .get('/api/vitals/trends?type=weight')
+        .expect(200);
+
+      assert.strictEqual(res.body.data.length, 1);
+      assert.strictEqual(res.body.data[0].type, 'weight');
+    });
+
+    it('should return empty data when no vitals exist', async () => {
+      const res = await agent()
+        .get('/api/vitals/trends')
+        .expect(200);
+
+      assert.strictEqual(res.body.data.length, 0);
+    });
+
+    it('should filter by date range', async () => {
+      makeVital({ type: 'weight', value: 72, value_secondary: null, measured_at: '2025-01-15T10:00:00.000Z' });
+      makeVital({ type: 'weight', value: 74, value_secondary: null, measured_at: '2025-03-15T10:00:00.000Z' });
+
+      const res = await agent()
+        .get('/api/vitals/trends?from=2025-03-01&to=2025-03-31')
+        .expect(200);
+
+      const weight = res.body.data.find(d => d.type === 'weight');
+      if (weight) {
+        assert.strictEqual(weight.count, 1);
+        assert.strictEqual(weight.avg_value, 74);
+      }
+    });
+  });
 });

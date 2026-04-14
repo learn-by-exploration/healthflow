@@ -34,6 +34,12 @@ class FamilyMemberService {
     this.repo.delete(id, userId);
     return { ok: true };
   }
+
+  getSummary(id, userId) {
+    const summary = this.repo.getSummary(id, userId);
+    if (!summary) throw new NotFoundError('Family member', id);
+    return summary;
+  }
 }
 
 module.exports = FamilyMemberService;

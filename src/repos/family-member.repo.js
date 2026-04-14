@@ -59,6 +59,33 @@ class FamilyMemberRepo {
   delete(id, userId) {
     return this.stmts.delete.run(id, userId);
   }
+
+  getSummary(id, userId) {
+    const member = this.stmts.getById.get(id, userId);
+    if (!member) return null;
+
+    const vitals = this.db.prepare(
+      'SELECT * FROM vitals WHERE family_member_id = ? AND user_id = ? ORDER BY measured_at DESC LIMIT 5'
+    ).all(id, userId);
+
+    const medications = this.db.prepare(
+      'SELECT * FROM medications WHERE family_member_id = ? AND user_id = ? AND is_active = 1 ORDER BY name'
+    ).all(id, userId);
+
+    const appointments = this.db.prepare(
+      "SELECT * FROM appointments WHERE family_member_id = ? AND user_id = ? AND appointment_date >= date('now') ORDER BY appointment_date ASC LIMIT 5"
+    ).all(id, userId);
+
+    const conditions = this.db.prepare(
+      "SELECT * FROM health_conditions WHERE family_member_id = ? AND user_id = ? AND status = 'active' ORDER BY name"
+    ).all(id, userId);
+
+    const allergies = this.db.prepare(
+      'SELECT * FROM allergies WHERE family_member_id = ? AND user_id = ? ORDER BY allergen'
+    ).all(id, userId);
+
+    return { ...member, vitals, medications, appointments, conditions, allergies };
+  }
 }
 
 module.exports = FamilyMemberRepo;

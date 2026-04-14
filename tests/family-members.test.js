@@ -1,6 +1,6 @@
 const { describe, it, before, beforeEach, after } = require('node:test');
 const assert = require('node:assert/strict');
-const { setup, cleanDb, teardown, agent, makeFamilyMember } = require('./helpers');
+const { setup, cleanDb, teardown, agent, makeFamilyMember, makeVital, makeMedication } = require('./helpers');
 
 describe('Family Members', () => {
   before(() => setup());
@@ -170,6 +170,45 @@ describe('Family Members', () => {
       const { db } = setup();
       const vital = db.prepare('SELECT * FROM vitals WHERE family_member_id = ?').get(member.id);
       assert.equal(vital, undefined);
+    });
+  });
+
+  describe('GET /api/family-members/:id/summary', () => {
+    it('should return aggregated summary for a family member', async () => {
+      const member = makeFamilyMember();
+      makeVital({ family_member_id: member.id });
+      makeMedication({ family_member_id: member.id });
+
+      const res = await agent()
+        .get(`/api/family-members/${member.id}/summary`)
+        .expect(200);
+
+      assert.ok(res.body.id);
+      assert.ok(Array.isArray(res.body.vitals));
+      assert.ok(Array.isArray(res.body.medications));
+      assert.ok(Array.isArray(res.body.appointments));
+      assert.ok(Array.isArray(res.body.conditions));
+      assert.ok(Array.isArray(res.body.allergies));
+    });
+
+    it('should return 404 for non-existent family member', async () => {
+      await agent()
+        .get('/api/family-members/00000000-0000-0000-0000-000000000000/summary')
+        .expect(404);
+    });
+
+    it('should return empty arrays when no related data exists', async () => {
+      const member = makeFamilyMember({ name: 'Empty Member' });
+
+      const res = await agent()
+        .get(`/api/family-members/${member.id}/summary`)
+        .expect(200);
+
+      assert.strictEqual(res.body.vitals.length, 0);
+      assert.strictEqual(res.body.medications.length, 0);
+      assert.strictEqual(res.body.appointments.length, 0);
+      assert.strictEqual(res.body.conditions.length, 0);
+      assert.strictEqual(res.body.allergies.length, 0);
     });
   });
 });
