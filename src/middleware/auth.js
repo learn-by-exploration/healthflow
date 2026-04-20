@@ -11,7 +11,7 @@ function parseCookies(header) {
     if (idx < 0) return;
     const key = pair.substring(0, idx).trim();
     const val = pair.substring(idx + 1).trim();
-    cookies[key] = decodeURIComponent(val);
+    try { cookies[key] = decodeURIComponent(val); } catch { /* skip malformed cookie */ }
   });
   return cookies;
 }

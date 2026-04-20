@@ -27,7 +27,8 @@ function errorHandler(err, req, res, _next) {
   }
 
   const status = err.status || err.statusCode || 500;
-  res.status(status).json({ error: status === 500 ? 'Internal server error' : err.message, code: 'INTERNAL_ERROR' });
+  // Never expose internal error messages — always use a generic message for unexpected errors
+  res.status(status).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
 }
 
 module.exports = errorHandler;

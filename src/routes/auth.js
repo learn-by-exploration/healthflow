@@ -134,6 +134,9 @@ module.exports = function authRoutes({ db }) {
     }
 
     const user = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.userId);
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
     if (!bcrypt.compareSync(String(current_password), user.password_hash)) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }

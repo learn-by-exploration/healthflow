@@ -19,8 +19,8 @@
       --bg: #fafafa;
       --surface: #ffffff;
       --text: #1a1a1a;
-      --text-secondary: #6b7280;
-      --text-muted: #9ca3af;
+      --text-secondary: #4b5563;
+      --text-muted: #6b7280;
       --border: #e5e7eb;
       --border-light: #f3f4f6;
       --radius: 12px;
@@ -36,11 +36,34 @@
       --info: #3b82f6;
       --info-bg: #eff6ff;
     }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    [data-theme="dark"] {
+      --primary: #f87171;
+      --primary-dark: #ef4444;
+      --primary-light: #451a1a;
+      --primary-bg: #1a0f0f;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --text: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: #334155;
+      --border-light: #1e293b;
+      --success: #4ade80;
+      --success-bg: #052e16;
+      --warning: #fbbf24;
+      --warning-bg: #451a03;
+      --danger: #f87171;
+      --danger-bg: #450a0a;
+      --info: #60a5fa;
+      --info-bg: #172554;
+      --shadow: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
     .app-header {
       background: var(--surface); border-bottom: 1px solid var(--border);
       padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
+      position: sticky; top: 0; z-index: 99;
     }
     .app-header h1 { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .app-header h1 span { color: var(--primary); }
@@ -48,19 +71,57 @@
     #user-email { font-size: 0.8rem; color: var(--text-secondary); }
     #logout-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; }
     #logout-btn:hover { color: var(--primary); background: var(--primary-light); }
-    .nav-tabs {
-      display: flex; gap: 4px; background: var(--surface); padding: 8px 24px;
-      border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch;
+    .app-layout {
+      display: block; min-height: calc(100vh - 57px);
     }
+    .nav-tabs {
+      display: flex; flex-direction: column; gap: 2px; background: var(--surface); padding: 0;
+      border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      width: 200px; flex-shrink: 0; position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+      transition: width 0.25s ease-out;
+    }
+    .nav-tabs .sidebar-header {
+      display: flex; align-items: center; padding: 1rem;
+      border-bottom: 1px solid var(--border); position: relative;
+    }
+    .nav-tabs .sidebar-header .logo { font-size: 1.125rem; font-weight: 700; color: var(--primary); white-space: nowrap; overflow: hidden; }
+    .nav-tabs .sidebar-header .logo-text { margin-left: 0.25rem; }
+    .nav-tabs .nav-scroll { flex: 1; padding: 0.5rem 0.5rem; overflow-y: auto; }
+    .sidebar-collapse-btn {
+      position: absolute; top: 50%; right: -14px; transform: translateY(-50%);
+      width: 28px; height: 28px; background: var(--surface); border: 1px solid var(--border);
+      color: var(--text-secondary, #64748b); cursor: pointer; padding: 0; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; z-index: 101;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12); transition: all 0.15s ease;
+    }
+    .sidebar-collapse-btn:hover {
+      background: var(--primary); color: white; border-color: var(--primary);
+      transform: translateY(-50%) scale(1.1);
+    }
+    .sidebar-collapse-btn .material-icons-round { font-size: 16px; }
+    .nav-tabs.collapsed { width: 56px; }
+    .nav-tabs.collapsed .nav-tab span:last-child { display: none; }
+    .nav-tabs.collapsed .logo-text { display: none; }
+    .nav-tabs.collapsed .nav-tab { justify-content: center; padding: 10px 0; }
+    .nav-tabs.collapsed .nav-tab:hover::after {
+      content: attr(data-label); position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+      background: var(--surface); color: var(--text); padding: 0.25rem 0.5rem; border-radius: 4px;
+      font-size: 0.75rem; white-space: nowrap; z-index: 1001; margin-left: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15); border: 1px solid var(--border);
+    }
+    .nav-tabs.collapsed .sidebar-header { padding: 1rem 0.5rem; justify-content: center; }
     .nav-tab {
-      padding: 8px 16px; border-radius: var(--radius-sm); border: none; background: none; cursor: pointer;
-      font-size: 0.875rem; font-weight: 500; color: var(--text-secondary);
-      display: flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap;
+      padding: 10px 14px; border-radius: var(--radius-sm); border: none; background: none; cursor: pointer;
+      font-size: 0.8rem; font-weight: 500; color: var(--text-secondary);
+      display: flex; align-items: center; gap: 8px; transition: all 0.2s; white-space: nowrap;
+      text-align: left; width: 100%; position: relative;
     }
     .nav-tab:hover { background: var(--primary-light); color: var(--primary); }
     .nav-tab.active { background: var(--primary); color: white; }
     .nav-tab .mi { font-size: 18px; }
-    .content { max-width: 960px; margin: 0 auto; padding: 24px; }
+    .content { max-width: 960px; margin-left: 200px; margin-right: auto; padding: 24px; flex: 1; min-width: 0; min-height: 100vh; transition: margin-left 0.25s ease-out; }
+    .nav-tabs.collapsed ~ .content { margin-left: 56px; }
     .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
     .card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
@@ -70,7 +131,7 @@
       background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
       padding: 20px; text-align: center; border-top: 3px solid var(--primary);
     }
-    .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .stat-card .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
     .stat-card .stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
     .btn {
       display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px;
@@ -79,18 +140,27 @@
     }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:active { opacity: 0.85; transform: scale(0.97); }
     .btn-secondary { background: var(--border-light); color: var(--text); }
     .btn-secondary:hover { background: var(--border); }
-    .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+    .btn-secondary:active { opacity: 0.85; transform: scale(0.97); }
+    .btn-sm { padding: 8px 14px; font-size: 0.8rem; min-height: 44px; }
     .btn-danger { background: var(--danger); color: white; }
     .btn-danger:hover { opacity: 0.9; }
+    .btn-danger:active { opacity: 0.75; transform: scale(0.97); }
     .btn-success { background: var(--success); color: white; }
     .btn-warning { background: var(--warning); color: white; }
     .btn-icon {
-      background: none; border: none; cursor: pointer; padding: 4px;
-      color: var(--text-secondary); border-radius: 4px; display: inline-flex; align-items: center;
+      background: none; border: none; cursor: pointer; padding: 10px;
+      color: var(--text-secondary); border-radius: 8px; display: inline-flex; align-items: center;
+      min-width: 44px; min-height: 44px; justify-content: center;
     }
     .btn-icon:hover { color: var(--primary); background: var(--primary-light); }
+    .btn-icon:active { opacity: 0.7; transform: scale(0.95); }
+    .btn:focus-visible, .btn-icon:focus-visible, .nav-tab:focus-visible {
+      outline: 2px solid var(--primary); outline-offset: 2px;
+    }
+    .btn:disabled, .btn-icon:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
     .data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
     .data-table th { text-align: left; padding: 12px 16px; background: var(--border-light); color: var(--text-secondary); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
     .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border-light); }
@@ -183,63 +253,79 @@
     }
     @media print {
       .app-header, .nav-tabs, .btn, .btn-icon, .modal-overlay, .toast-container, .filter-bar { display: none !important; }
+      .app-layout { display: block; }
       .content { max-width: 100%; padding: 0; }
       .ec-card { break-inside: avoid; border: 2px solid #000; box-shadow: none; page-break-inside: avoid; }
     }
     @media (max-width: 640px) {
-      .content { padding: 16px; }
+      .nav-tabs { display: none; }
+      .content { margin-left: 0 !important; padding: 16px; }
       .form-row { grid-template-columns: 1fr; }
       .stats-grid { grid-template-columns: 1fr 1fr; }
       .data-table { font-size: 0.8rem; }
       .data-table th, .data-table td { padding: 8px 10px; }
-      .nav-tabs { padding: 8px 12px; }
+    }
+    .skip-link { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; z-index: 999; padding: 8px 16px; background: var(--primary); color: #fff; font-weight: 600; text-decoration: none; border-radius: 0 0 8px 0; }
+    .skip-link:focus { position: fixed; left: 0; top: 0; width: auto; height: auto; overflow: visible; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     }
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <h1><span class="material-icons-round" style="color:var(--primary);font-size:28px">favorite</span> <span>HealthFlow</span></h1>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <header class="app-header" style="margin-left:200px;transition:margin-left 0.25s ease-out;">
+    <h1>&nbsp;</h1>
     <div class="header-right">
       <span id="user-email"></span>
       <button id="logout-btn">Logout</button>
     </div>
   </header>
+  <div class="app-layout">
   <nav class="nav-tabs" id="nav-tabs">
-    <button class="nav-tab active" data-view="dashboard">
-      <span class="material-icons-round mi">dashboard</span> Dashboard
-    </button>
-    <button class="nav-tab" data-view="vitals">
-      <span class="material-icons-round mi">favorite</span> Vitals
-    </button>
-    <button class="nav-tab" data-view="medications">
-      <span class="material-icons-round mi">medication</span> Medications
-    </button>
-    <button class="nav-tab" data-view="appointments">
-      <span class="material-icons-round mi">calendar_today</span> Appointments
-    </button>
-    <button class="nav-tab" data-view="emergency">
-      <span class="material-icons-round mi">emergency</span> Emergency
-    </button>
-    <button class="nav-tab" data-view="family">
-      <span class="material-icons-round mi">people</span> Family
-    </button>
-    <button class="nav-tab" data-view="conditions">
-      <span class="material-icons-round mi">medical_information</span> Conditions
-    </button>
-    <button class="nav-tab" data-view="allergies">
-      <span class="material-icons-round mi">warning_amber</span> Allergies
-    </button>
-    <button class="nav-tab" data-view="expenses">
-      <span class="material-icons-round mi">receipt_long</span> Expenses
-    </button>
-    <button class="nav-tab" data-view="first-aid">
-      <span class="material-icons-round mi">medical_services</span> First Aid
-    </button>
-    <button class="nav-tab" data-view="documents">
-      <span class="material-icons-round mi">description</span> Documents
-    </button>
+    <div class="sidebar-header">
+      <div class="logo">❤️ <span class="logo-text">HealthFlow</span></div>
+      <button id="sidebar-collapse" class="sidebar-collapse-btn" aria-label="Collapse sidebar" aria-expanded="true">
+        <span class="material-icons-round">chevron_left</span>
+      </button>
+    </div>
+    <div class="nav-scroll">
+      <button class="nav-tab active" data-view="dashboard" data-label="Dashboard">
+        <span class="material-icons-round mi">dashboard</span> <span>Dashboard</span>
+      </button>
+      <button class="nav-tab" data-view="vitals" data-label="Vitals">
+        <span class="material-icons-round mi">favorite</span> <span>Vitals</span>
+      </button>
+      <button class="nav-tab" data-view="medications" data-label="Medications">
+        <span class="material-icons-round mi">medication</span> <span>Medications</span>
+      </button>
+      <button class="nav-tab" data-view="appointments" data-label="Appointments">
+        <span class="material-icons-round mi">calendar_today</span> <span>Appointments</span>
+      </button>
+      <button class="nav-tab" data-view="emergency" data-label="Emergency">
+        <span class="material-icons-round mi">emergency</span> <span>Emergency</span>
+      </button>
+      <button class="nav-tab" data-view="family" data-label="Family">
+        <span class="material-icons-round mi">people</span> <span>Family</span>
+      </button>
+      <button class="nav-tab" data-view="conditions" data-label="Conditions">
+        <span class="material-icons-round mi">medical_information</span> <span>Conditions</span>
+      </button>
+      <button class="nav-tab" data-view="allergies" data-label="Allergies">
+        <span class="material-icons-round mi">warning_amber</span> <span>Allergies</span>
+      </button>
+      <button class="nav-tab" data-view="expenses" data-label="Expenses">
+        <span class="material-icons-round mi">receipt_long</span> <span>Expenses</span>
+      </button>
+      <button class="nav-tab" data-view="first-aid" data-label="First Aid">
+        <span class="material-icons-round mi">medical_services</span> <span>First Aid</span>
+      </button>
+      <button class="nav-tab" data-view="documents" data-label="Documents">
+        <span class="material-icons-round mi">description</span> <span>Documents</span>
+      </button>
+    </div>
   </nav>
-  <div class="content">
+  <main class="content" id="main-content">
     <div id="view-dashboard" class="view active"></div>
     <div id="view-vitals" class="view"></div>
     <div id="view-medications" class="view"></div>
@@ -251,11 +337,12 @@
     <div id="view-expenses" class="view"></div>
     <div id="view-first-aid" class="view"></div>
     <div id="view-documents" class="view"></div>
-  </div>
-  <div class="modal-overlay" id="modal-overlay">
+  </main>
+  </div><!-- /app-layout -->
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal" id="modal-content"></div>
   </div>
-  <div class="toast-container" id="toast-container"></div>
+  <div class="toast-container" id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <script>
     'use strict';
@@ -307,6 +394,14 @@
       setTimeout(function() { el.remove(); }, 3500);
     }
 
+    // Save button loading state helper
+    function withLoading(btnId, fn) {
+      var btn = document.getElementById(btnId);
+      var original = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Saving...';
+      fn().catch(function() {}).finally(function() { if (btn.parentNode) { btn.disabled = false; btn.textContent = original; } });
+    }
+
     // ═══════════════════════════════════════════
     // State
     // ═══════════════════════════════════════════
@@ -328,8 +423,9 @@
     var documentFilter = '';
 
     // ═══════════════════════════════════════════
-    // Navigation
+    // Navigation (hash-based deep linking)
     // ═══════════════════════════════════════════
+    var validViews = ['dashboard','vitals','medications','appointments','emergency','family','conditions','allergies','expenses','first-aid','documents'];
     function switchView(viewName) {
       currentView = viewName;
       document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
@@ -338,8 +434,17 @@
       if (viewEl) viewEl.classList.add('active');
       var tabEl = document.querySelector('.nav-tab[data-view="' + viewName + '"]');
       if (tabEl) tabEl.classList.add('active');
+      // Update URL hash for deep linking
+      if (viewName !== 'dashboard') { history.replaceState(null, '', '#' + viewName); }
+      else { history.replaceState(null, '', window.location.pathname); }
       render();
     }
+
+    function handleHashNav() {
+      var hash = window.location.hash.replace('#', '');
+      if (hash && validViews.indexOf(hash) !== -1) switchView(hash);
+    }
+    window.addEventListener('hashchange', handleHashNav);
 
     document.querySelectorAll('.nav-tab').forEach(function(tab) {
       tab.addEventListener('click', function() { switchView(this.dataset.view); });
@@ -348,16 +453,33 @@
     // ═══════════════════════════════════════════
     // Modal
     // ═══════════════════════════════════════════
+    var _lastFocused = null;
     function openModal(html) {
-      document.getElementById('modal-content').innerHTML = html;
+      _lastFocused = document.activeElement;
+      var content = document.getElementById('modal-content');
+      content.innerHTML = html;
+      // Ensure modal title has id for aria-labelledby
+      var titleEl = content.querySelector('h3');
+      if (titleEl) titleEl.id = 'modal-title';
       document.getElementById('modal-overlay').classList.add('open');
+      // Prevent double-submit: disable primary button on click (capture phase)
+      content.querySelectorAll('.btn-primary').forEach(function(btn) {
+        btn.addEventListener('click', function() { btn.disabled = true; }, true);
+      });
+      // Focus first input or button inside modal
+      var first = content.querySelector('input, select, textarea, button');
+      if (first) first.focus();
     }
     function closeModal() {
       document.getElementById('modal-overlay').classList.remove('open');
       document.getElementById('modal-content').innerHTML = '';
+      if (_lastFocused) _lastFocused.focus();
     }
     document.getElementById('modal-overlay').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && document.getElementById('modal-overlay').classList.contains('open')) closeModal();
     });
 
     // ═══════════════════════════════════════════
@@ -436,6 +558,8 @@
       } catch(e) { showToast('Failed to load family members: ' + e.message, 'error'); }
     }
     async function loadAll() {
+      // Show loading indicator
+      document.getElementById('view-dashboard').innerHTML = '<div class="empty-state"><span class="material-icons-round">hourglass_empty</span><h3>Loading...</h3></div>';
       await Promise.all([loadVitals(), loadMedications(), loadAppointments(), loadEmergencyCards(), loadFamilyMembers()]);
       render();
     }
@@ -476,7 +600,7 @@
 
       h += '<div class="card"><div class="card-header"><h3><span class="material-icons-round" style="color:var(--primary)">add_circle</span> Quick Log Vital</h3></div>';
       h += '<div class="form-row">';
-      h += '<div class="form-group"><label>Type</label><select id="ql-type">';
+      h += '<div class="form-group"><label for="ql-type">Type</label><select id="ql-type" aria-label="Vital type">';
       Object.keys(vitalTypeLabels).forEach(function(k) { h += '<option value="' + esc(k) + '">' + esc(vitalTypeLabels[k]) + '</option>'; });
       h += '</select></div>';
       h += '<div class="form-group"><label>Value</label><input type="number" id="ql-value" step="0.1" placeholder="Enter value"></div>';
@@ -510,18 +634,19 @@
         qlSave.addEventListener('click', async function() {
           var type = document.getElementById('ql-type').value;
           var value = parseFloat(document.getElementById('ql-value').value);
-          if (isNaN(value)) { showToast('Please enter a value', 'error'); return; }
+          if (isNaN(value) || value <= 0) { showToast('Please enter a valid positive value', 'error'); return; }
           var body = { type: type, value: value, measured_at: nowISO(), unit: vitalUnits[type] || '' };
           var sec = document.getElementById('ql-secondary').value;
           if (sec) body.value_secondary = parseFloat(sec);
           var notes = document.getElementById('ql-notes').value;
           if (notes) body.notes = notes;
+          qlSave.disabled = true; qlSave.textContent = 'Saving...';
           try {
             await api('/api/vitals', { method: 'POST', body: JSON.stringify(body) });
             showToast('Vital logged!', 'success');
             await loadVitals();
             renderDashboard();
-          } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+          } catch(e) { showToast('Failed: ' + e.message, 'error'); qlSave.disabled = false; qlSave.innerHTML = '<span class="material-icons-round" style="font-size:16px">save</span> Save Vital'; }
         });
       }
     }
@@ -530,11 +655,11 @@
     // Vitals View
     // ═══════════════════════════════════════════
     function renderVitals() {
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">favorite</span> Vitals</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">favorite</span> Vitals</h2>';
       h += '<button class="btn btn-primary" id="add-vital-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Vital</button></div>';
 
       h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Filter:</label>';
-      h += '<select id="vital-filter"><option value="">All Types</option>';
+      h += '<select id="vital-filter" aria-label="Filter vitals by type"><option value="">All Types</option>';
       Object.keys(vitalTypeLabels).forEach(function(k) {
         h += '<option value="' + esc(k) + '"' + (vitalFilter === k ? ' selected' : '') + '>' + esc(vitalTypeLabels[k]) + '</option>';
       });
@@ -554,8 +679,8 @@
           h += '<td>' + esc(fmtDateTime(v.measured_at)) + '</td>';
           h += '<td>' + esc(getMemberName(v.family_member_id)) + '</td>';
           h += '<td>' + esc(v.notes || '') + '</td>';
-          h += '<td class="actions"><button class="btn-icon edit-vital" data-id="' + escA(v.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
-          h += '<button class="btn-icon del-vital" data-id="' + escA(v.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td>';
+          h += '<td class="actions"><button class="btn-icon edit-vital" data-id="' + escA(v.id) + '" title="Edit" aria-label="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-vital" data-id="' + escA(v.id) + '" title="Delete" aria-label="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td>';
           h += '</tr>';
         });
         h += '</tbody></table></div>';
@@ -607,21 +732,21 @@
           if (isEdit) { await api('/api/vitals/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Vital updated', 'success'); }
           else { await api('/api/vitals', { method: 'POST', body: JSON.stringify(body) }); showToast('Vital added', 'success'); }
           closeModal(); await loadVitals(); renderVitals();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function deleteVital(id) {
       if (!confirm('Delete this vital record?')) return;
       try { await api('/api/vitals/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Vital deleted', 'success'); await loadVitals(); renderVitals(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
     // Medications View
     // ═══════════════════════════════════════════
     function renderMedications() {
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">medication</span> Medications</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">medication</span> Medications</h2>';
       h += '<button class="btn btn-primary" id="add-med-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Medication</button></div>';
       if (medications.length === 0) {
         h += '<div class="empty-state"><span class="material-icons-round">medication</span><h3>No medications</h3><p>Add your medications to track dosages and refills.</p></div>';
@@ -644,7 +769,7 @@
           } else {
             h += '<button class="btn btn-sm btn-success start-med" data-id="' + escA(m.id) + '"><span class="material-icons-round" style="font-size:14px">play_arrow</span> Restart</button>';
           }
-          h += '<button class="btn btn-sm btn-danger del-med" data-id="' + escA(m.id) + '"><span class="material-icons-round" style="font-size:14px">delete</span></button>';
+          h += '<button class="btn btn-sm btn-danger del-med" data-id="' + escA(m.id) + '" aria-label="Delete"><span class="material-icons-round" style="font-size:14px">delete</span></button>';
           h += '</div></div>';
         });
         h += '</div>';
@@ -703,26 +828,26 @@
           if (isEdit) { await api('/api/medications/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Medication updated', 'success'); }
           else { await api('/api/medications', { method: 'POST', body: JSON.stringify(body) }); showToast('Medication added', 'success'); }
           closeModal(); await loadMedications(); renderMedications();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function toggleMed(id, active) {
       try { await api('/api/medications/' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify({ is_active: active }) }); showToast(active ? 'Medication restarted' : 'Medication stopped', 'success'); await loadMedications(); render(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     async function deleteMed(id) {
       if (!confirm('Delete this medication?')) return;
       try { await api('/api/medications/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Medication deleted', 'success'); await loadMedications(); renderMedications(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
     // Appointments View
     // ═══════════════════════════════════════════
     function renderAppointments() {
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">calendar_today</span> Appointments</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">calendar_today</span> Appointments</h2>';
       h += '<button class="btn btn-primary" id="add-appt-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Appointment</button></div>';
       if (appointments.length === 0) {
         h += '<div class="empty-state"><span class="material-icons-round">calendar_today</span><h3>No appointments</h3><p>Schedule your next doctor visit.</p></div>';
@@ -745,8 +870,8 @@
             if (a.notes) h += '<div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px">' + esc(a.notes) + '</div>';
             h += '</div>';
             h += '<div style="display:flex;gap:4px">';
-            h += '<button class="btn-icon edit-appt" data-id="' + escA(a.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
-            h += '<button class="btn-icon del-appt" data-id="' + escA(a.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button>';
+            h += '<button class="btn-icon edit-appt" data-id="' + escA(a.id) + '" title="Edit" aria-label="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+            h += '<button class="btn-icon del-appt" data-id="' + escA(a.id) + '" title="Delete" aria-label="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button>';
             h += '</div></div>';
           });
           h += '</div>';
@@ -799,21 +924,21 @@
           if (isEdit) { await api('/api/appointments/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Appointment updated', 'success'); }
           else { await api('/api/appointments', { method: 'POST', body: JSON.stringify(body) }); showToast('Appointment added', 'success'); }
           closeModal(); await loadAppointments(); renderAppointments();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function deleteAppt(id) {
       if (!confirm('Delete this appointment?')) return;
       try { await api('/api/appointments/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Appointment deleted', 'success'); await loadAppointments(); renderAppointments(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
     // Emergency Cards View
     // ═══════════════════════════════════════════
     function renderEmergency() {
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--danger)">emergency</span> Emergency Health Cards</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--danger)">emergency</span> Emergency Health Cards</h2>';
       h += '<div style="display:flex;gap:8px">';
       h += '<button class="btn btn-secondary" id="print-ec-btn"><span class="material-icons-round" style="font-size:16px">print</span> Print</button>';
       h += '<button class="btn btn-primary" id="add-ec-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Card</button>';
@@ -825,8 +950,8 @@
         emergencyCards.forEach(function(c) {
           h += '<div class="ec-card"><div class="ec-card-header"><h4><span class="material-icons-round" style="font-size:20px;color:var(--danger)">emergency</span> ' + esc(getMemberName(c.family_member_id)) + '</h4>';
           h += '<div style="display:flex;gap:4px">';
-          h += '<button class="btn-icon edit-ec" data-id="' + escA(c.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
-          h += '<button class="btn-icon del-ec" data-id="' + escA(c.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button>';
+          h += '<button class="btn-icon edit-ec" data-id="' + escA(c.id) + '" title="Edit" aria-label="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-ec" data-id="' + escA(c.id) + '" title="Delete" aria-label="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button>';
           h += '</div></div>';
           if (c.blood_type && c.blood_type !== 'unknown') h += '<div class="ec-field"><div class="ec-field-label">Blood Type</div><div class="ec-field-value" style="font-size:1.2rem;font-weight:700;color:var(--danger)">' + esc(c.blood_type) + '</div></div>';
           if (c.allergies) h += '<div class="ec-field"><div class="ec-field-label">Allergies</div><div class="ec-field-value">' + esc(c.allergies) + '</div></div>';
@@ -912,21 +1037,21 @@
           if (isEdit) { await api('/api/emergency-cards/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Card updated', 'success'); }
           else { await api('/api/emergency-cards', { method: 'POST', body: JSON.stringify(body) }); showToast('Card created', 'success'); }
           closeModal(); await loadEmergencyCards(); renderEmergency();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function deleteEc(id) {
       if (!confirm('Delete this emergency card?')) return;
       try { await api('/api/emergency-cards/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Card deleted', 'success'); await loadEmergencyCards(); renderEmergency(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
     // Family Members View
     // ═══════════════════════════════════════════
     function renderFamily() {
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">people</span> Family Members</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">people</span> Family Members</h2>';
       h += '<button class="btn btn-primary" id="add-fm-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Member</button></div>';
       if (familyMembers.length === 0) {
         h += '<div class="empty-state"><span class="material-icons-round">people</span><h3>No family members</h3><p>Add family members to track health data for each person.</p></div>';
@@ -991,14 +1116,14 @@
           if (isEdit) { await api('/api/family-members/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Member updated', 'success'); }
           else { await api('/api/family-members', { method: 'POST', body: JSON.stringify(body) }); showToast('Member added', 'success'); }
           closeModal(); await loadFamilyMembers(); renderFamily();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function deleteFm(id) {
       if (!confirm('Delete this family member? Related health data will be unlinked.')) return;
       try { await api('/api/family-members/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Member deleted', 'success'); await loadAll(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
@@ -1034,13 +1159,14 @@
     // ═══════════════════════════════════════════
     async function renderConditions() {
       var el = document.getElementById('view-conditions');
+      el.innerHTML = '<div class="empty-state"><span class="material-icons-round">hourglass_empty</span><h3>Loading conditions...</h3></div>';
       try { var res = await api('/api/conditions' + (conditionFilter ? '?status=' + encodeURIComponent(conditionFilter) : '')); conditions = res.data || []; }
       catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
 
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">medical_information</span> Conditions</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">medical_information</span> Conditions</h2>';
       h += '<button class="btn btn-primary" id="add-cond-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Condition</button></div>';
       h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Status:</label>';
-      h += '<select id="cond-filter"><option value="">All</option>';
+      h += '<select id="cond-filter" aria-label="Filter conditions by status"><option value="">All</option>';
       ['active','resolved','managed'].forEach(function(s) { h += '<option value="' + esc(s) + '"' + (conditionFilter === s ? ' selected' : '') + '>' + esc(s.charAt(0).toUpperCase() + s.slice(1)) + '</option>'; });
       h += '</select></div>';
 
@@ -1054,8 +1180,8 @@
           h += '<td><span class="badge badge-' + (c.status === 'active' ? 'active' : c.status === 'managed' ? 'scheduled' : 'stopped') + '">' + esc(c.status || '') + '</span></td>';
           h += '<td>' + esc(fmtDate(c.diagnosed_date)) + '</td><td>' + esc(c.diagnosed_by || '') + '</td>';
           h += '<td>' + esc(getMemberName(c.family_member_id)) + '</td>';
-          h += '<td class="actions"><button class="btn-icon edit-cond" data-id="' + escA(c.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
-          h += '<button class="btn-icon del-cond" data-id="' + escA(c.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+          h += '<td class="actions"><button class="btn-icon edit-cond" data-id="' + escA(c.id) + '" title="Edit" aria-label="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-cond" data-id="' + escA(c.id) + '" title="Delete" aria-label="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
         });
         h += '</tbody></table></div>';
       }
@@ -1096,14 +1222,14 @@
           if (isEdit) { await api('/api/conditions/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Condition updated', 'success'); }
           else { await api('/api/conditions', { method: 'POST', body: JSON.stringify(body) }); showToast('Condition added', 'success'); }
           closeModal(); renderConditions();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function deleteCond(id) {
       if (!confirm('Delete this condition?')) return;
       try { await api('/api/conditions/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Condition deleted', 'success'); renderConditions(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
@@ -1111,15 +1237,16 @@
     // ═══════════════════════════════════════════
     async function renderAllergies() {
       var el = document.getElementById('view-allergies');
+      el.innerHTML = '<div class="empty-state"><span class="material-icons-round">hourglass_empty</span><h3>Loading allergies...</h3></div>';
       try { var res = await api('/api/allergies'); allergies = res.data || []; }
       catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
 
       var items = allergyFilter ? allergies.filter(function(a) { return a.severity === allergyFilter; }) : allergies;
 
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--warning)">warning_amber</span> Allergies</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--warning)">warning_amber</span> Allergies</h2>';
       h += '<button class="btn btn-primary" id="add-allg-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Allergy</button></div>';
       h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Severity:</label>';
-      h += '<select id="allg-filter"><option value="">All</option>';
+      h += '<select id="allg-filter" aria-label="Filter allergies by severity"><option value="">All</option>';
       ['mild','moderate','severe','life-threatening'].forEach(function(s) { h += '<option value="' + esc(s) + '"' + (allergyFilter === s ? ' selected' : '') + '>' + esc(s.charAt(0).toUpperCase() + s.slice(1).replace(/-/g, ' ')) + '</option>'; });
       h += '</select></div>';
 
@@ -1133,8 +1260,8 @@
           h += '<td><span class="badge ' + sevBadge(a.severity) + '">' + esc(a.severity || '') + '</span></td>';
           h += '<td>' + esc(getMemberName(a.family_member_id)) + '</td>';
           h += '<td>' + esc(a.notes || '') + '</td>';
-          h += '<td class="actions"><button class="btn-icon edit-allg" data-id="' + escA(a.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
-          h += '<button class="btn-icon del-allg" data-id="' + escA(a.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+          h += '<td class="actions"><button class="btn-icon edit-allg" data-id="' + escA(a.id) + '" title="Edit" aria-label="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-allg" data-id="' + escA(a.id) + '" title="Delete" aria-label="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
         });
         h += '</tbody></table></div>';
       }
@@ -1171,14 +1298,14 @@
           if (isEdit) { await api('/api/allergies/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Allergy updated', 'success'); }
           else { await api('/api/allergies', { method: 'POST', body: JSON.stringify(body) }); showToast('Allergy added', 'success'); }
           closeModal(); renderAllergies();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function deleteAllergy(id) {
       if (!confirm('Delete this allergy record?')) return;
       try { await api('/api/allergies/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Allergy deleted', 'success'); renderAllergies(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
@@ -1186,20 +1313,21 @@
     // ═══════════════════════════════════════════
     async function renderExpenses() {
       var el = document.getElementById('view-expenses');
+      el.innerHTML = '<div class="empty-state"><span class="material-icons-round">hourglass_empty</span><h3>Loading expenses...</h3></div>';
       try { var res = await api('/api/medical-expenses' + (expenseFilter ? '?category=' + encodeURIComponent(expenseFilter) : '')); medExpenses = res.data || []; }
       catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
 
       var total = medExpenses.reduce(function(s, e) { return s + (Number(e.amount) || 0); }, 0);
       var reimbursable = medExpenses.filter(function(e) { return e.is_reimbursable; }).reduce(function(s, e) { return s + (Number(e.amount) || 0); }, 0);
 
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">receipt_long</span> Medical Expenses</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--primary)">receipt_long</span> Medical Expenses</h2>';
       h += '<button class="btn btn-primary" id="add-exp-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Expense</button></div>';
       h += '<div class="stats-grid">';
       h += '<div class="stat-card"><div class="stat-value">' + esc(fmtCurrency(total)) + '</div><div class="stat-label">Total Expenses</div></div>';
       h += '<div class="stat-card"><div class="stat-value">' + esc(fmtCurrency(reimbursable)) + '</div><div class="stat-label">Reimbursable</div></div>';
       h += '</div>';
       h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Category:</label>';
-      h += '<select id="exp-filter"><option value="">All</option>';
+      h += '<select id="exp-filter" aria-label="Filter expenses by category"><option value="">All</option>';
       Object.keys(expenseCategoryLabels).forEach(function(k) { h += '<option value="' + esc(k) + '"' + (expenseFilter === k ? ' selected' : '') + '>' + esc(expenseCategoryLabels[k]) + '</option>'; });
       h += '</select></div>';
 
@@ -1214,8 +1342,8 @@
           h += '<td>' + esc(fmtDate(e.date)) + '</td>';
           h += '<td>' + (e.is_reimbursable ? '<span class="badge badge-reimbursable">Yes</span>' : 'No') + '</td>';
           h += '<td>' + esc(getMemberName(e.family_member_id)) + '</td>';
-          h += '<td class="actions"><button class="btn-icon edit-exp" data-id="' + escA(e.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
-          h += '<button class="btn-icon del-exp" data-id="' + escA(e.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+          h += '<td class="actions"><button class="btn-icon edit-exp" data-id="' + escA(e.id) + '" title="Edit" aria-label="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-exp" data-id="' + escA(e.id) + '" title="Delete" aria-label="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
         });
         h += '</tbody></table></div>';
       }
@@ -1257,14 +1385,14 @@
           if (isEdit) { await api('/api/medical-expenses/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Expense updated', 'success'); }
           else { await api('/api/medical-expenses', { method: 'POST', body: JSON.stringify(body) }); showToast('Expense added', 'success'); }
           closeModal(); renderExpenses();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function deleteExpense(id) {
       if (!confirm('Delete this expense?')) return;
       try { await api('/api/medical-expenses/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Expense deleted', 'success'); renderExpenses(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
@@ -1272,10 +1400,11 @@
     // ═══════════════════════════════════════════
     async function renderFirstAid() {
       var el = document.getElementById('view-first-aid');
+      el.innerHTML = '<div class="empty-state"><span class="material-icons-round">hourglass_empty</span><h3>Loading first aid items...</h3></div>';
       try { var res = await api('/api/first-aid'); firstAidItems = res.data || []; }
       catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
 
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--success)">medical_services</span> First Aid Kit</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--success)">medical_services</span> First Aid Kit</h2>';
       h += '<button class="btn btn-primary" id="add-fa-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Item</button></div>';
 
       if (firstAidItems.length === 0) {
@@ -1291,8 +1420,8 @@
           h += '<td>' + esc(fmtDate(item.expiry_date)) + '</td>';
           h += '<td>' + (es === 'expired' ? '<span class="badge badge-expired">Expired</span>' : es === 'expiring' ? '<span class="badge badge-expiring">Expiring Soon</span>' : '<span class="badge badge-active">OK</span>') + '</td>';
           h += '<td>' + esc(item.notes || '') + '</td>';
-          h += '<td class="actions"><button class="btn-icon edit-fa" data-id="' + escA(item.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
-          h += '<button class="btn-icon del-fa" data-id="' + escA(item.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+          h += '<td class="actions"><button class="btn-icon edit-fa" data-id="' + escA(item.id) + '" title="Edit" aria-label="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-fa" data-id="' + escA(item.id) + '" title="Delete" aria-label="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
         });
         h += '</tbody></table></div>';
       }
@@ -1325,14 +1454,14 @@
           if (isEdit) { await api('/api/first-aid/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Item updated', 'success'); }
           else { await api('/api/first-aid', { method: 'POST', body: JSON.stringify(body) }); showToast('Item added', 'success'); }
           closeModal(); renderFirstAid();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function deleteFirstAidItem(id) {
       if (!confirm('Delete this first aid item?')) return;
       try { await api('/api/first-aid/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Item deleted', 'success'); renderFirstAid(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
@@ -1340,13 +1469,14 @@
     // ═══════════════════════════════════════════
     async function renderDocuments() {
       var el = document.getElementById('view-documents');
+      el.innerHTML = '<div class="empty-state"><span class="material-icons-round">hourglass_empty</span><h3>Loading documents...</h3></div>';
       try { var res = await api('/api/documents' + (documentFilter ? '?document_type=' + encodeURIComponent(documentFilter) : '')); medDocuments = res.data || []; }
       catch(e) { el.innerHTML = '<div class="empty-state"><span class="material-icons-round">error</span><h3>Failed to load</h3><p>' + esc(e.message) + '</p></div>'; return; }
 
-      var h = '<div class="card-header"><h3 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--info)">description</span> Medical Documents</h3>';
+      var h = '<div class="card-header"><h2 style="font-size:1.2rem"><span class="material-icons-round" style="color:var(--info)">description</span> Medical Documents</h2>';
       h += '<button class="btn btn-primary" id="add-doc-btn"><span class="material-icons-round" style="font-size:16px">add</span> Add Document</button></div>';
       h += '<div class="filter-bar"><label style="font-size:0.8rem;font-weight:600;color:var(--text-secondary)">Type:</label>';
-      h += '<select id="doc-filter"><option value="">All</option>';
+      h += '<select id="doc-filter" aria-label="Filter documents by type"><option value="">All</option>';
       Object.keys(documentTypeLabels).forEach(function(k) { h += '<option value="' + esc(k) + '"' + (documentFilter === k ? ' selected' : '') + '>' + esc(documentTypeLabels[k]) + '</option>'; });
       h += '</select></div>';
 
@@ -1361,8 +1491,8 @@
           h += '<td>' + esc(fmtDate(d.expiry_date)) + '</td>';
           h += '<td>' + esc(getMemberName(d.family_member_id)) + '</td>';
           h += '<td>' + esc(d.file_reference || '') + '</td>';
-          h += '<td class="actions"><button class="btn-icon edit-doc" data-id="' + escA(d.id) + '" title="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
-          h += '<button class="btn-icon del-doc" data-id="' + escA(d.id) + '" title="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
+          h += '<td class="actions"><button class="btn-icon edit-doc" data-id="' + escA(d.id) + '" title="Edit" aria-label="Edit"><span class="material-icons-round" style="font-size:18px">edit</span></button>';
+          h += '<button class="btn-icon del-doc" data-id="' + escA(d.id) + '" title="Delete" aria-label="Delete"><span class="material-icons-round" style="font-size:18px;color:var(--danger)">delete</span></button></td></tr>';
         });
         h += '</tbody></table></div>';
       }
@@ -1403,14 +1533,14 @@
           if (isEdit) { await api('/api/documents/' + encodeURIComponent(existing.id), { method: 'PUT', body: JSON.stringify(body) }); showToast('Document updated', 'success'); }
           else { await api('/api/documents', { method: 'POST', body: JSON.stringify(body) }); showToast('Document added', 'success'); }
           closeModal(); renderDocuments();
-        } catch(e) { showToast('Failed: ' + e.message, 'error'); }
+        } catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
       });
     }
 
     async function deleteDoc(id) {
       if (!confirm('Delete this document?')) return;
       try { await api('/api/documents/' + encodeURIComponent(id), { method: 'DELETE' }); showToast('Document deleted', 'success'); renderDocuments(); }
-      catch(e) { showToast('Failed: ' + e.message, 'error'); }
+      catch(e) { showToast('Failed: ' + e.message, 'error'); var _b = document.querySelector('#modal-content .btn-primary'); if(_b) _b.disabled = false; }
     }
 
     // ═══════════════════════════════════════════
@@ -1430,8 +1560,54 @@
         if (data.user) document.getElementById('user-email').textContent = data.user.email || '';
       } catch(e) { window.location.href = '/login'; return; }
       await loadAll();
+      // Restore view from URL hash
+      handleHashNav();
     }
     init();
+
+    // ═══════════════════════════════════════════
+    // Sidebar collapse
+    // ═══════════════════════════════════════════
+    (function(){
+      var sidebar = document.getElementById('nav-tabs');
+      var collapseBtn = document.getElementById('sidebar-collapse');
+      var appHeader = document.querySelector('.app-header');
+      var sidebarState = localStorage.getItem('hf_sidebar');
+      function applySidebarState(collapsed) {
+        if (collapsed) {
+          sidebar.classList.add('collapsed');
+          if (collapseBtn) collapseBtn.setAttribute('aria-expanded', 'false');
+          var icon = collapseBtn ? collapseBtn.querySelector('.material-icons-round') : null;
+          if (icon) icon.textContent = 'chevron_right';
+          if (appHeader) appHeader.style.marginLeft = '56px';
+        } else {
+          sidebar.classList.remove('collapsed');
+          if (collapseBtn) collapseBtn.setAttribute('aria-expanded', 'true');
+          var icon2 = collapseBtn ? collapseBtn.querySelector('.material-icons-round') : null;
+          if (icon2) icon2.textContent = 'chevron_left';
+          if (appHeader) appHeader.style.marginLeft = '200px';
+        }
+      }
+      if (sidebarState === 'collapsed') applySidebarState(true);
+      if (collapseBtn) {
+        collapseBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          sidebar.classList.toggle('collapsed');
+          var isExpanded = !sidebar.classList.contains('collapsed');
+          localStorage.setItem('hf_sidebar', isExpanded ? 'expanded' : 'collapsed');
+          applySidebarState(!isExpanded);
+        });
+      }
+    })();
+
+    // ═══════════════════════════════════════════
+    // Theme listener (parent iframe messages)
+    // ═══════════════════════════════════════════
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'synclyf-theme') {
+        document.documentElement.setAttribute('data-theme', e.data.theme === 'dark' ? 'dark' : '');
+      }
+    });
   </script>
 </body>
 </html>

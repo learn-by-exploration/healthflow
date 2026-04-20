@@ -7,46 +7,66 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root { --primary: #e11d48; --bg: #fafafa; --surface: #fff; --text: #1a1a1a; --border: #e5e7eb; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    :root { --primary: #E8837B; --primary-dark: #D6675F; --bg: #fafafa; --surface: #fff; --text: #1a1a1a; --border: #e5e7eb; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; line-height: 1.5; }
     .login-card { background: var(--surface); border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 40px; width: 100%; max-width: 400px; }
     .login-card h1 { text-align: center; margin-bottom: 8px; font-size: 1.5rem; }
     .login-card p { text-align: center; color: #6b7280; margin-bottom: 24px; font-size: 0.875rem; }
     .form-group { margin-bottom: 16px; }
     .form-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 4px; }
     .form-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+    .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232,131,123,0.2); }
     .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; background: var(--primary); color: white; }
-    .btn:hover { opacity: 0.9; }
+    .btn:hover { background: var(--primary-dark); }
+    .btn:active { opacity: 0.85; transform: scale(0.98); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     .error { color: #dc2626; font-size: 0.8rem; margin-bottom: 12px; min-height: 1.2em; }
     .toggle { text-align: center; margin-top: 16px; font-size: 0.8rem; }
     .toggle a { color: var(--primary); cursor: pointer; text-decoration: none; }
+    @media (max-width: 440px) { .login-card { padding: 24px 20px; max-width: 95vw; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    .pw-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; padding: 4px; line-height: 1; }
+    .pw-toggle:hover { color: var(--primary); }
+    .pw-wrap { position: relative; }
   </style>
 </head>
 <body>
   <div class="login-card">
-    <h1>🏥 HealthFlow</h1>
+    <h1><span class="material-icons-round" style="color:var(--primary);font-size:32px;vertical-align:middle">favorite</span> HealthFlow</h1>
     <p id="form-subtitle">Sign in to your account</p>
     <div class="error" id="error"></div>
-    <form id="auth-form" onsubmit="handleSubmit(event)">
+    <form id="auth-form">
       <div class="form-group" id="name-group" style="display:none;">
         <label for="display_name">Name</label>
         <input type="text" id="display_name" placeholder="Your name">
       </div>
       <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" id="email" placeholder="you@example.com" required>
+        <input type="email" id="email" placeholder="you@example.com" required autocomplete="email">
       </div>
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" placeholder="••••••••" required minlength="8">
+        <div class="pw-wrap">
+          <input type="password" id="password" placeholder="••••••••" required minlength="8" autocomplete="current-password">
+          <button type="button" class="pw-toggle" id="pw-toggle-password" aria-label="Show password"><span class="material-icons-round" style="font-size:20px">visibility</span></button>
+        </div>
+      </div>
+      <div class="form-group" id="confirm-group" style="display:none;">
+        <label for="password_confirm">Confirm Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="password_confirm" placeholder="••••••••" minlength="8" autocomplete="new-password">
+          <button type="button" class="pw-toggle" id="pw-toggle-confirm" aria-label="Show password"><span class="material-icons-round" style="font-size:20px">visibility</span></button>
+        </div>
       </div>
       <button type="submit" class="btn" id="submit-btn">Sign In</button>
     </form>
     <div class="toggle">
       <span id="toggle-text">Don't have an account? </span>
-      <a id="toggle-link" onclick="toggleMode()">Register</a>
+      <a id="toggle-link" href="#">Register</a>
     </div>
   </div>
   <script>
@@ -59,24 +79,43 @@
       document.getElementById('toggle-text').textContent = isLogin ? "Don't have an account? " : 'Already have an account? ';
       document.getElementById('toggle-link').textContent = isLogin ? 'Register' : 'Sign In';
       document.getElementById('name-group').style.display = isLogin ? 'none' : 'block';
+      document.getElementById('confirm-group').style.display = isLogin ? 'none' : 'block';
+      document.getElementById('password').autocomplete = isLogin ? 'current-password' : 'new-password';
       document.getElementById('error').textContent = '';
+    }
+    function togglePw(id) {
+      var input = document.getElementById(id);
+      var icon = input.parentNode.querySelector('.pw-toggle .material-icons-round');
+      if (input.type === 'password') { input.type = 'text'; icon.textContent = 'visibility_off'; }
+      else { input.type = 'password'; icon.textContent = 'visibility'; }
     }
     async function handleSubmit(e) {
       e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const display_name = document.getElementById('display_name').value;
-      const url = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const body = isLogin ? { email, password } : { email, password, display_name };
+      var email = document.getElementById('email').value;
+      var password = document.getElementById('password').value;
+      var display_name = document.getElementById('display_name').value;
+      if (!isLogin) {
+        var confirm = document.getElementById('password_confirm').value;
+        if (password !== confirm) { document.getElementById('error').textContent = 'Passwords do not match'; return; }
+      }
+      var url = isLogin ? '/api/auth/login' : '/api/auth/register';
+      var body = isLogin ? { email, password } : { email, password, display_name };
+      var btn = document.getElementById('submit-btn');
+      btn.disabled = true; btn.textContent = isLogin ? 'Signing in...' : 'Registering...';
       try {
-        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' });
-        const data = await res.json();
+        var res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' });
+        var data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Request failed');
         window.location.href = '/';
       } catch (err) {
         document.getElementById('error').textContent = esc(err.message);
+        btn.disabled = false; btn.textContent = isLogin ? 'Sign In' : 'Register';
       }
     }
+    document.getElementById('auth-form').addEventListener('submit', handleSubmit);
+    document.getElementById('pw-toggle-password').addEventListener('click', function() { togglePw('password'); });
+    document.getElementById('pw-toggle-confirm').addEventListener('click', function() { togglePw('password_confirm'); });
+    document.getElementById('toggle-link').addEventListener('click', function(e) { e.preventDefault(); toggleMode(); });
   </script>
 </body>
 </html>

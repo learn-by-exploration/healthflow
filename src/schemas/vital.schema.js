@@ -5,8 +5,8 @@ const vitalTypes = ['blood_pressure', 'blood_sugar', 'weight', 'temperature', 's
 const createVitalSchema = z.object({
   family_member_id: z.string().uuid().optional().nullable(),
   type: z.enum(vitalTypes),
-  value: z.number({ required_error: 'Value is required' }),
-  value_secondary: z.number().optional().nullable(), // e.g. diastolic for blood pressure
+  value: z.number({ required_error: 'Value is required' }).min(0, 'Value must be non-negative'),
+  value_secondary: z.number().min(0, 'Value must be non-negative').optional().nullable(), // e.g. diastolic for blood pressure
   unit: z.string().max(20).default(''),
   measured_at: z.string().datetime({ offset: true }).optional(),
   notes: z.string().max(1000).default(''),

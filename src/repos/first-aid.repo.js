@@ -57,13 +57,9 @@ class FirstAidRepo {
   }
 
   findExpiring(userId, days = 30) {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() + days);
-    const cutoffStr = cutoff.toISOString().split('T')[0];
-
     return this.db.prepare(
-      `SELECT * FROM first_aid_items WHERE user_id = ? AND expiry_date IS NOT NULL AND expiry_date <= ? AND is_available = 1 ORDER BY expiry_date ASC`
-    ).all(userId, cutoffStr);
+      `SELECT * FROM first_aid_items WHERE user_id = ? AND expiry_date IS NOT NULL AND expiry_date <= date('now', '+' || ? || ' days') AND is_available = 1 ORDER BY expiry_date ASC`
+    ).all(userId, days);
   }
 
   update(id, userId, data) {

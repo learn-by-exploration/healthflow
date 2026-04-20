@@ -115,6 +115,8 @@ if (!config.isTest) {
 // ─── Auth middleware on all /api/* routes ───
 app.use('/api', (req, res, next) => {
   if (req.path.startsWith('/auth/') || req.path.startsWith('/health')) return optionalAuth(req, res, next);
+  // Share endpoints are public (no auth required)
+  if (/^\/emergency-cards\/[^/]+\/share$/.test(req.path)) return next();
   requireAuth(req, res, next);
 });
 
@@ -141,14 +143,9 @@ app.use(require('./routes/first-aid')(deps));
 
 // ─── Shareable emergency card (public, no auth) ───
 const emergencyCardService = new EmergencyCardService(new EmergencyCardRepo(db));
-app.get('/api/emergency-cards/:id/share', (req, res) => {
-  try {
-    const card = emergencyCardService.getShareable(req.params.id);
-    res.json(card);
-  } catch (err) {
-    if (err.status === 404) return res.status(404).json({ error: err.message });
-    res.status(500).json({ error: 'Internal server error' });
-  }
+app.get('/api/emergency-cards/:id/share', (req, res, next) => {
+  const card = emergencyCardService.getShareable(req.params.id);
+  res.json(card);
 });
 
 // ─── Login page ───
@@ -162,14 +159,9 @@ app.all('/api/{*splat}', (req, res) => {
 });
 
 // ─── SPA fallback ───
-app.get('/{*splat}', (req, res) => {
-  const cookieHeader = req.headers.cookie || '';
-  const match = cookieHeader.match(/hf_sid=([^;]+)/);
-  if (match) {
-    const session = db.prepare("SELECT * FROM sessions WHERE sid = ? AND expires_at > datetime('now')").get(match[1]);
-    if (session) {
-      return res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-    }
+app.get('/{*splat}', optionalAuth, (req, res) => {
+  if (req.userId) {
+    return res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
   }
   res.redirect('/login');
 });

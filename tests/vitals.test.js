@@ -98,6 +98,13 @@ describe('Vitals', () => {
         .send({ type: 'invalid_type', value: 120 })
         .expect(400);
     });
+
+    it('returns 400 for negative value', async () => {
+      await agent()
+        .post('/api/vitals')
+        .send({ type: 'weight', value: -5 })
+        .expect(400);
+    });
   });
 
   describe('GET /api/vitals/:id', () => {
