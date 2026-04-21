@@ -1,0 +1,19 @@
+{
+  "service": "HealthFlow",
+  "prefix": "hf",
+  "icon": "favorite",
+  "color": "health",
+  "views": [
+    {"id": "dashboard", "label": "Dashboard", "icon": "dashboard"},
+    {"id": "vitals", "label": "Vitals", "icon": "favorite"},
+    {"id": "medications", "label": "Medications", "icon": "medication"},
+    {"id": "appointments", "label": "Appointments", "icon": "calendar_today"},
+    {"id": "emergency", "label": "Emergency", "icon": "emergency"},
+    {"id": "family", "label": "Family", "icon": "people"},
+    {"id": "conditions", "label": "Conditions", "icon": "medical_information"},
+    {"id": "allergies", "label": "Allergies", "icon": "warning_amber"},
+    {"id": "expenses", "label": "Expenses", "icon": "receipt_long"},
+    {"id": "first-aid", "label": "First Aid", "icon": "medical_services"},
+    {"id": "documents", "label": "Documents", "icon": "description"}
+  ]
+}
